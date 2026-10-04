@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f5f5f7">
+<title>Facility Feedback</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="facility-types.js?v=20261004h"></script>
+<script src="facility-supabase.js?v=20261004h"></script>
+<style>
+  :root {
+    --bg: #f2f2f7;
+    --ink: #1d1d1f;
+    --muted: #86868b;
+    --line: rgba(0,0,0,0.08);
+    --line-strong: rgba(0,0,0,0.12);
+    --gold: #c4a574;
+    --gold-soft: #e8d9c0;
+    --gold-deep: #a8874f;
+    --card: #ffffff;
+    --ok: #34c759;
+    --danger: #ff3b30;
+    --blue: #0071e3;
+    --shadow: 0 4px 24px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  html, body { min-height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--ink);
+    letter-spacing: -0.015em;
+  }
+  .shell {
+    min-height: 100dvh;
+    display: grid;
+    place-items: center;
+    padding: 28px 18px 36px;
+  }
+  .card {
+    width: min(400px, 100%);
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+    padding: 40px 28px 30px;
+    text-align: center;
+    position: relative;
+  }
+  .icon-wrap {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 22px;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fbf7f0, #f3ebdd);
+    display: grid;
+    place-items: center;
+  }
+  .icon-wrap svg {
+    width: 26px;
+    height: 26px;
+    stroke: var(--gold);
+    fill: none;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .icon-wrap.is-alert {
+    background: linear-gradient(180deg, #fbf7f0, #f3ebdd);
+  }
+  .icon-wrap.is-alert svg {
+    stroke: var(--gold);
+  }
+  h1, .section-title {
+    font-size: clamp(1.45rem, 5vw, 1.7rem);
+    font-weight: 680;
+    letter-spacing: -0.035em;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .meta {
+    display: none; /* keep UI clean like previous guest view */
+  }
+  .stars {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 28px 0 18px;
+  }
+  .star {
+    width: 42px;
+    height: 42px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform .14s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .star:active { transform: scale(0.92); }
+  .star svg { width: 100%; height: 100%; display: block; }
+  .star .fill { fill: #e5e5ea; transition: fill .12s ease; }
+  .star.is-on .fill,
+  .star.is-preview .fill { fill: var(--gold); }
+  .hint {
+    font-size: 0.95rem;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .panel { display: none; animation: fade .26s ease; }
+  .panel.is-active { display: block; }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  .section-sub {
+    font-size: 0.95rem;
+    color: var(--muted);
+    margin: 0 auto 22px;
+    max-width: 28ch;
+    line-height: 1.4;
+    letter-spacing: -0.015em;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 22px;
+  }
+  .chip {
+    border: 1px solid var(--line-strong);
+    background: #fff;
+    color: #3a3a3c;
+    border-radius: 980px;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    cursor: pointer;
+    transition: .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip:hover { border-color: rgba(0,0,0,0.22); }
+  .chip.is-on {
+    background: rgba(196,165,116,0.16);
+    border-color: var(--gold);
+    color: #5c4a2e;
+  }
+  .note-toggle {
+    border: 0;
+    background: none;
+    color: var(--blue);
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin: 0 0 14px;
+    cursor: pointer;
+  }
+  textarea {
+    display: none;
+    width: 100%;
+    min-height: 88px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font: inherit;
+    font-size: 0.95rem;
+    resize: vertical;
+    background: #fafafa;
+    color: var(--ink);
+    margin-bottom: 16px;
+  }
+  textarea.is-on { display: block; }
+  textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.16);
+    background: #fff;
+  }
+  .actions {
+    display: grid;
+    gap: 10px;
+  }
+  .btn {
+    border: 0;
+    border-radius: 980px;
+    padding: 14px 22px;
+    font: inherit;
+    font-size: 1.02rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    cursor: pointer;
+    transition: .15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:active { transform: scale(0.985); }
+  .btn-primary {
+    width: 100%;
+    background: linear-gradient(180deg, #d2b48c, var(--gold-deep));
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(168,135,79,0.28);
+  }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .btn-back {
+    width: 100%;
+    background: transparent;
+    color: var(--blue);
+    font-weight: 510;
+    font-size: 0.95rem;
+    padding: 8px;
+  }
+  .thank-check {
+    width: 64px;
+    height: 64px;
+    margin: 8px auto 18px;
+    border-radius: 50%;
+    background: rgba(52,199,89,0.12);
+    display: grid;
+    place-items: center;
+    color: var(--ok);
+    font-size: 1.8rem;
+    font-weight: 600;
+  }
+  .error-banner {
+    display: none;
+    background: rgba(255,59,48,0.08);
+    color: var(--danger);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    text-align: left;
+    letter-spacing: -0.01em;
+  }
+  .error-banner.is-on { display: block; }
+  .source-pill,
+  .footer-note { display: none; }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card" id="app">
+      <div class="error-banner" id="errorBanner"></div>
+
+      <div class="panel is-active" id="panelRate">
+        <div class="icon-wrap" id="typeIcon" aria-hidden="true"></div>
+        <div class="source-pill" id="sourcePill" hidden></div>
+        <h1 id="rateTitle">How was your visit?</h1>
+        <p class="meta" id="rateMeta"></p>
+        <div class="stars" id="stars" role="radiogroup" aria-label="Star rating"></div>
+        <p class="hint" id="rateHint">Tap to rate</p>
+      </div>
+
+      <div class="panel" id="panelImprove">
+        <div class="icon-wrap is-alert" id="improveIcon" aria-hidden="true"></div>
+        <h2 class="section-title" id="improveTitle">What went wrong?</h2>
+        <p class="section-sub" id="improveSub">Select all that apply — it helps us improve.</p>
+        <div class="chips" id="chips"></div>
+        <button type="button" class="note-toggle" id="noteToggle">Add a note</button>
+        <textarea id="comment" placeholder="Anything else? (optional)" maxlength="500"></textarea>
+        <div class="actions">
+          <button type="button" class="btn btn-primary" id="btnSubmit">Submit</button>
+          <button type="button" class="btn btn-back" id="btnBack">Back</button>
+        </div>
+      </div>
+
+      <div class="panel" id="panelThanks">
+        <div class="thank-check" aria-hidden="true">✓</div>
+        <h1>Thank you</h1>
+        <p class="section-sub" style="margin-top:10px;margin-bottom:0">Your feedback helps us improve this space.</p>
+      </div>
+
+      <p class="footer-note" id="footerNote"></p>
+    </div>
+  </div>
+
+<script>
+(function () {
+  const { facilityId, source } = FacilityKit.parseFeedbackParams();
+  let facility = FacilityKit.resolveFromCode(facilityId) || {
+    id: facilityId || 'UNKNOWN',
+    typeCode: 'PR',
+    typeName: 'Facility',
+    name: 'Facility',
+    property: '',
+    location: '',
+    ephemeral: true
+  };
+  let type = FacilityKit.FACILITY_TYPES[facility.typeCode] || FacilityKit.FACILITY_TYPES.PR;
+
+  let rating = 0;
+  let selected = new Set();
+  let submitting = false;
+
+  const els = {
+    error: document.getElementById('errorBanner'),
+    panelRate: document.getElementById('panelRate'),
+    panelImprove: document.getElementById('panelImprove'),
+    panelThanks: document.getElementById('panelThanks'),
+    rateTitle: document.getElementById('rateTitle'),
+    rateMeta: document.getElementById('rateMeta'),
+    rateHint: document.getElementById('rateHint'),
+    stars: document.getElementById('stars'),
+    chips: document.getElementById('chips'),
+    comment: document.getElementById('comment'),
+    noteToggle: document.getElementById('noteToggle'),
+    btnBack: document.getElementById('btnBack'),
+    btnSubmit: document.getElementById('btnSubmit'),
+    sourcePill: document.getElementById('sourcePill'),
+    footerNote: document.getElementById('footerNote'),
+    typeIcon: document.getElementById('typeIcon'),
+    improveIcon: document.getElementById('improveIcon'),
+    improveTitle: document.getElementById('improveTitle'),
+    improveSub: document.getElementById('improveSub')
+  };
+
+  const ALERT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><circle cx="12" cy="16.5" r="0.8" fill="currentColor" stroke="none"/></svg>';
+
+  function showError(msg) {
+    els.error.textContent = msg;
+    els.error.classList.toggle('is-on', !!msg);
+  }
+
+  function showPanel(name) {
+    [els.panelRate, els.panelImprove, els.panelThanks].forEach(p => p.classList.remove('is-active'));
+    if (name === 'rate') els.panelRate.classList.add('is-active');
+    if (name === 'improve') els.panelImprove.classList.add('is-active');
+    if (name === 'thanks') els.panelThanks.classList.add('is-active');
+  }
+
+  function iconSvg() {
+    return '<svg viewBox="0 0 24 24" aria-hidden="true">' + type.icon + '</svg>';
+  }
+
+  function metaLine() {
+    const parts = [];
+    if (facility.property) parts.push(facility.property);
+    if (facility.location) parts.push(facility.location);
+    else {
+      const locBits = [facility.building, facility.floor, facility.zone].filter(Boolean);
+      if (locBits.length) parts.push(locBits.join(' · '));
+    }
+    if (facility.id && facility.id !== 'UNKNOWN') parts.push(facility.id);
+    return parts.join(' · ');
+  }
+
+  function renderStars() {
+    els.stars.innerHTML = '';
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'star' + (i <= rating ? ' is-on' : '');
+      btn.setAttribute('aria-label', i + ' star' + (i > 1 ? 's' : ''));
+      btn.innerHTML = '<svg viewBox="0 0 24 24"><path class="fill" d="M12 2.5l2.9 6.1 6.6.9-4.8 4.6 1.2 6.5L12 17.8 6.1 20.6l1.2-6.5L2.5 9.5l6.6-.9L12 2.5z"/></svg>';
+      btn.addEventListener('mouseenter', () => preview(i));
+      btn.addEventListener('mouseleave', () => preview(0));
+      btn.addEventListener('click', () => selectRating(i));
+      els.stars.appendChild(btn);
+    }
+  }
+
+  function preview(n) {
+    [...els.stars.children].forEach((btn, idx) => {
+      btn.classList.toggle('is-preview', n > 0 && idx < n);
+      btn.classList.toggle('is-on', idx < rating);
+    });
+  }
+
+  function configureImproveCopy() {
+    if (rating <= 3) {
+      els.improveTitle.textContent = 'What went wrong?';
+      els.improveSub.textContent = 'Select all that apply — it helps us improve.';
+      els.improveIcon.innerHTML = ALERT_ICON;
+      els.improveIcon.classList.add('is-alert');
+    } else {
+      els.improveTitle.textContent = 'Glad it went well';
+      els.improveSub.textContent = 'Anything we could still improve? Optional.';
+      els.improveIcon.innerHTML = iconSvg();
+      els.improveIcon.classList.remove('is-alert');
+    }
+  }
+
+  function selectRating(n) {
+    rating = n;
+    renderStars();
+    els.rateHint.textContent = 'Tap to rate';
+    configureImproveCopy();
+    setTimeout(() => showPanel('improve'), 160);
+  }
+
+  function renderChips() {
+    els.chips.innerHTML = '';
+    type.improve.forEach(label => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip';
+      chip.textContent = label;
+      chip.addEventListener('click', () => {
+        if (selected.has(label)) selected.delete(label);
+        else selected.add(label);
+        chip.classList.toggle('is-on', selected.has(label));
+      });
+      els.chips.appendChild(chip);
+    });
+  }
+
+  async function submit() {
+    if (submitting || !rating) return;
+    submitting = true;
+    els.btnSubmit.disabled = true;
+    els.btnSubmit.textContent = 'Sending…';
+    showError('');
+
+    const payload = {
+      facilityId: facility.id,
+      facilityType: facility.typeCode,
+      facilityTypeName: facility.typeName,
+      facilityName: facility.name,
+      property: facility.property || '',
+      location: facility.location || '',
+      building: facility.building || '',
+      floor: facility.floor || '',
+      zone: facility.zone || '',
+      source: source || 'web',
+      rating,
+      issues: Array.from(selected),
+      comment: (els.comment.value || '').trim(),
+      userAgent: navigator.userAgent,
+      submittedAt: new Date().toISOString(),
+      pageUrl: location.href
+    };
+
+    try {
+      const backups = JSON.parse(localStorage.getItem('rsgFeedbackSubmissions') || '[]');
+      backups.unshift(payload);
+      localStorage.setItem('rsgFeedbackSubmissions', JSON.stringify(backups.slice(0, 200)));
+
+      await FacilitySupabase.submitFeedback(payload);
+      showPanel('thanks');
+    } catch (err) {
+      console.error(err);
+      showError('Could not send feedback. Please try again.');
+      els.btnSubmit.disabled = false;
+      els.btnSubmit.textContent = 'Submit';
+      submitting = false;
+    }
+  }
+
+  function paintFacility() {
+    type = FacilityKit.FACILITY_TYPES[facility.typeCode] || FacilityKit.FACILITY_TYPES.PR;
+    document.title = 'Feedback · ' + facility.name;
+    els.rateTitle.textContent = 'How was the ' + facility.name + '?';
+    els.rateMeta.textContent = metaLine();
+    els.typeIcon.innerHTML = iconSvg();
+    if (rating) configureImproveCopy();
+    else {
+      els.improveIcon.innerHTML = ALERT_ICON;
+    }
+    els.footerNote.textContent = facility.id && facility.id !== 'UNKNOWN' ? facility.id : '';
+    renderChips();
+  }
+
+  paintFacility();
+  renderStars();
+
+  els.noteToggle.addEventListener('click', () => {
+    const on = els.comment.classList.toggle('is-on');
+    els.noteToggle.textContent = on ? 'Hide note' : 'Add a note';
+    if (on) els.comment.focus();
+  });
+
+  els.btnBack.addEventListener('click', () => {
+    selected.clear();
+    els.comment.value = '';
+    els.comment.classList.remove('is-on');
+    els.noteToggle.textContent = 'Add a note';
+    renderChips();
+    showPanel('rate');
+  });
+  els.btnSubmit.addEventListener('click', submit);
+
+  if (!facilityId) {
+    showError('Missing facility code. Open this page from a QR code or NFC tag (e.g. ?f=PR-001&s=qr).');
+  } else {
+    FacilitySupabase.getFacility(facilityId).then(remote => {
+      if (remote) {
+        facility = remote;
+        paintFacility();
+      }
+    }).catch(err => console.warn('Could not load facility from Supabase', err));
+  }
+})();
+</script>
+</body>
+</html>
