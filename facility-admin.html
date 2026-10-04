@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facility Feedback Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="facility-types.js?v=20261004i"></script>
+<script src="facility-supabase.js?v=20261004i"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --bg-elevated: rgba(255,255,255,0.72);
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0,0,0,0.08);
+    --line-strong: rgba(0,0,0,0.12);
+    --fill: #ffffff;
+    --fill-secondary: #f5f5f7;
+    --blue: #0071e3;
+    --blue-press: #0077ed;
+    --danger: #ff3b30;
+    --danger-bg: rgba(255,59,48,0.08);
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
+    --radius: 18px;
+    --radius-sm: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #ffffff 0%, transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+  header {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-elevated);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-family: var(--display);
+    font-size: 1.3rem;
+    font-weight: 650;
+    margin: 0;
+    letter-spacing: -0.03em;
+  }
+  header p {
+    margin: 3px 0 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 22px 72px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 960px) {
+    .wrap { grid-template-columns: 1fr; padding-top: 20px; }
+  }
+  .panel {
+    background: var(--fill);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 22px 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel h2 {
+    font-family: var(--display);
+    font-size: 1.05rem;
+    font-weight: 650;
+    margin: 0 0 16px;
+    letter-spacing: -0.025em;
+  }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--muted);
+    margin: 14px 0 6px;
+  }
+  label:first-of-type { margin-top: 0; }
+  input, select, textarea {
+    width: 100%;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 11px 13px;
+    font: inherit;
+    font-size: 0.95rem;
+    letter-spacing: -0.015em;
+    background: var(--fill);
+    color: var(--ink);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  input::placeholder, textarea::placeholder { color: #a1a1a6; }
+  input:hover, select:hover, textarea:hover { border-color: rgba(0,0,0,0.2); }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.18);
+    background: #fff;
+  }
+  textarea { min-height: 76px; resize: vertical; }
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236e6e73' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .row2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .btn {
+    border: 0;
+    border-radius: 980px;
+    padding: 11px 18px;
+    font: inherit;
+    font-weight: 560;
+    font-size: 0.92rem;
+    letter-spacing: -0.015em;
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease, opacity .15s ease, border-color .15s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    width: 100%;
+    margin-top: 18px;
+  }
+  .btn-primary:hover { background: var(--blue-press); }
+  .btn-ghost {
+    background: rgba(0,0,0,0.04);
+    border: 1px solid transparent;
+    color: var(--ink);
+  }
+  .btn-ghost:hover {
+    background: rgba(0,0,0,0.07);
+  }
+  .btn-danger {
+    background: var(--danger-bg);
+    border: 1px solid transparent;
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(255,59,48,0.14); }
+  .btn-sm {
+    padding: 7px 13px;
+    font-size: 0.8rem;
+    font-weight: 530;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .toolbar input[type="search"] {
+    max-width: 280px;
+    background: var(--fill-secondary);
+    border-color: transparent;
+  }
+  .toolbar input[type="search"]:focus {
+    background: #fff;
+  }
+  .settings-inline {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: var(--fill-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+  }
+  .settings-inline > div { flex: 1; min-width: 180px; }
+  .settings-inline label { margin-top: 0; }
+  .settings-inline input {
+    background: #fff;
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 14px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: 0; }
+  th {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 560;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    padding-top: 4px;
+    padding-bottom: 10px;
+  }
+  .id {
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  td .muted { margin-top: 2px; font-size: 0.82rem; }
+  .muted { color: var(--muted); }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .actions .btn-primary { width: auto; margin-top: 0; }
+  .urls { display: none; }
+  .empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* Print sign modal */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.36);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    z-index: 20;
+    padding: 24px;
+    overflow: auto;
+  }
+  .modal.is-on { display: grid; place-items: start center; }
+  .modal-inner {
+    background: rgba(255,255,255,0.96);
+    border-radius: 22px;
+    width: min(920px, 100%);
+    margin: 24px auto;
+    padding: 20px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .modal-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  #modalTitle {
+    font-family: var(--display);
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+  }
+  .size-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    background: var(--fill-secondary);
+    border-radius: 980px;
+  }
+  .size-tabs button {
+    border: 0 !important;
+    background: transparent;
+  }
+  .size-tabs button.is-on {
+    background: #fff !important;
+    color: var(--ink) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* Printable sign — user template */
+  .sign-stage {
+    display: grid;
+    place-items: center;
+    background: #e8e8ed;
+    border-radius: 16px;
+    padding: 24px;
+    overflow: auto;
+  }
+
+  .page {
+    --cream: #f7f2e9;
+    --green: #173b30;
+    --gold: #b99a52;
+
+    position: relative;
+    width: min(100%, 794px);
+    aspect-ratio: 210 / 297;
+    background: var(--cream);
+    overflow: hidden; /* content clip; frame is inset inside */
+    padding: 90px 76px 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    box-shadow: 0 12px 40px rgba(0,0,0,.06);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    color: var(--green);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page.size-a4 { width: 210mm; height: 297mm; aspect-ratio: auto; }
+  .page.size-a5 {
+    width: 148mm; height: 210mm; aspect-ratio: auto;
+    padding: 56px 48px 42px;
+  }
+  .page.size-a6 {
+    width: 105mm; height: 148mm; aspect-ratio: auto;
+    padding: 40px 32px 30px;
+  }
+  .page.size-sticker {
+    width: 100mm; height: 140mm; aspect-ratio: auto;
+    padding: 36px 28px 28px;
+  }
+
+  .page .frame {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    bottom: 22px;
+    left: 22px;
+    width: auto;
+    height: auto;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .page.size-a5 .frame { top: 16px; right: 16px; bottom: 16px; left: 16px; }
+  .page.size-a6 .frame { top: 12px; right: 12px; bottom: 12px; left: 12px; }
+  .page.size-sticker .frame { top: 10px; right: 10px; bottom: 10px; left: 10px; }
+  .page .frame path {
+    fill: none;
+    stroke: var(--gold);
+    stroke-width: 2.2;
+    /* keep stroke in SVG user units so it never clips outside the viewBox */
+  }
+  .page img.frame {
+    position: absolute;
+    top: 22px;
+    right: 22px;
+    bottom: 22px;
+    left: 22px;
+    width: auto;
+    height: auto;
+    pointer-events: none;
+    display: block;
+  }
+  .page.size-a5 img.frame { top: 16px; right: 16px; bottom: 16px; left: 16px; }
+  .page.size-a6 img.frame { top: 12px; right: 12px; bottom: 12px; left: 12px; }
+  .page.size-sticker img.frame { top: 10px; right: 10px; bottom: 10px; left: 10px; }
+
+  .page .lotus-row {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+  }
+  .page.size-a5 .lotus-row { margin-top: 14px; gap: 12px; }
+  .page.size-a6 .lotus-row { margin-top: 10px; gap: 9px; }
+  .page.size-sticker .lotus-row { margin-top: 8px; gap: 8px; }
+  .page .lotus-line { width: 105px; height: 1px; background: var(--gold); }
+  .page.size-a5 .lotus-line { width: 70px; }
+  .page.size-a6 .lotus-line { width: 52px; }
+  .page.size-sticker .lotus-line { width: 44px; }
+  .page .lotus { width: 52px; height: 40px; color: var(--gold); }
+  .page.size-a5 .lotus { width: 36px; height: 28px; }
+  .page.size-a6 .lotus { width: 30px; height: 23px; }
+  .page.size-sticker .lotus { width: 26px; height: 20px; }
+  .page .lotus path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .page .small-title {
+    margin-top: 34px;
+    font-size: 25px;
+    font-weight: 400;
+    letter-spacing: .30em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .page.size-a5 .small-title { margin-top: 20px; font-size: 16px; letter-spacing: .24em; }
+  .page.size-a6 .small-title { margin-top: 14px; font-size: 12px; letter-spacing: .2em; }
+  .page.size-sticker .small-title { margin-top: 12px; font-size: 11px; letter-spacing: .18em; }
+
+  .page .main-title {
+    margin-top: 24px;
+    font-size: 72px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -.045em;
+    white-space: nowrap;
+    text-align: center;
+    max-width: 100%;
+  }
+  .page.size-a5 .main-title { margin-top: 14px; font-size: 46px; }
+  .page.size-a6 .main-title { margin-top: 12px; font-size: 34px; }
+  .page.size-sticker .main-title { margin-top: 10px; font-size: 28px; }
+  .page .main-title.is-long { font-size: 52px; letter-spacing: -.03em; }
+  .page.size-a5 .main-title.is-long { font-size: 34px; }
+  .page.size-a6 .main-title.is-long { font-size: 24px; }
+  .page.size-sticker .main-title.is-long { font-size: 20px; }
+  .page .main-title.is-xl { font-size: 40px; white-space: normal; }
+  .page.size-a5 .main-title.is-xl { font-size: 28px; }
+  .page.size-a6 .main-title.is-xl { font-size: 18px; }
+  .page.size-sticker .main-title.is-xl { font-size: 16px; }
+
+  .page .divider {
+    width: 400px;
+    max-width: 72%;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    margin-top: 55px;
+    margin-bottom: 31px;
+  }
+  .page.size-a5 .divider { margin-top: 32px; margin-bottom: 20px; gap: 12px; }
+  .page.size-a6 .divider { margin-top: 22px; margin-bottom: 14px; gap: 9px; }
+  .page.size-sticker .divider { margin-top: 18px; margin-bottom: 12px; gap: 8px; }
+  .page .divider-line { flex: 1; height: 1px; background: var(--gold); }
+  .page .divider-dot {
+    width: 9px; height: 9px; flex-shrink: 0;
+    border-radius: 50%; background: var(--gold);
+  }
+  .page.size-a6 .divider-dot { width: 7px; height: 7px; }
+  .page.size-sticker .divider-dot { width: 6px; height: 6px; }
+  .page .lower-divider { margin-top: 39px; margin-bottom: 27px; }
+  .page.size-a5 .lower-divider { margin-top: 24px; margin-bottom: 16px; }
+  .page.size-a6 .lower-divider { margin-top: 16px; margin-bottom: 12px; }
+  .page.size-sticker .lower-divider { margin-top: 14px; margin-bottom: 10px; }
+
+  .page .ratings {
+    width: 100%;
+    max-width: 585px;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    column-gap: 30px;
+    align-items: center;
+  }
+  .page.size-a5 .ratings { column-gap: 18px; }
+  .page.size-a6 .ratings { column-gap: 12px; }
+  .page.size-sticker .ratings { column-gap: 10px; }
+  .page .rating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .page .rating-circle {
+    width: 220px;
+    height: 220px;
+    border: 1.3px solid var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .page.size-a5 .rating-circle { width: 140px; height: 140px; }
+  .page.size-a6 .rating-circle { width: 100px; height: 100px; }
+  .page.size-sticker .rating-circle { width: 88px; height: 88px; }
+  .page .feedback-icon {
+    width: 108px;
+    height: 108px;
+    display: block;
+    overflow: visible;
+  }
+  .page.size-a5 .feedback-icon { width: 68px; height: 68px; }
+  .page.size-a6 .feedback-icon { width: 48px; height: 48px; }
+  .page.size-sticker .feedback-icon { width: 42px; height: 42px; }
+  .page .feedback-icon path { fill: #173B30; }
+  .page .vertical-line {
+    width: 1px;
+    height: 180px;
+    background: var(--gold);
+  }
+  .page.size-a5 .vertical-line { height: 110px; }
+  .page.size-a6 .vertical-line { height: 80px; }
+  .page.size-sticker .vertical-line { height: 70px; }
+  .page .rating-label {
+    margin-top: 18px;
+    font-size: 19px;
+    font-weight: 400;
+    letter-spacing: .15em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .page.size-a5 .rating-label { margin-top: 12px; font-size: 13px; }
+  .page.size-a6 .rating-label { margin-top: 9px; font-size: 10px; letter-spacing: .12em; }
+  .page.size-sticker .rating-label { margin-top: 8px; font-size: 9px; letter-spacing: .1em; }
+
+  .page .qr-frame {
+    width: 147px;
+    height: 147px;
+    border: 1.25px solid var(--gold);
+    border-radius: 14px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    box-sizing: border-box;
+    line-height: 0;
+  }
+  .page.size-a5 .qr-frame { width: 110px; height: 110px; border-radius: 11px; padding: 8px; }
+  .page.size-a6 .qr-frame { width: 88px; height: 88px; border-radius: 10px; padding: 7px; }
+  .page.size-sticker .qr-frame { width: 78px; height: 78px; border-radius: 9px; padding: 6px; }
+  .page .qr-frame #signQr {
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center;
+  }
+  .page .qr-frame #signQr img,
+  .page .qr-frame #signQr canvas {
+    width: 100% !important;
+    height: 100% !important;
+    image-rendering: pixelated;
+  }
+
+  .page .nfc-area {
+    margin-top: auto;
+    padding-top: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .page.size-a5 .nfc-area { margin-top: 32px; }
+  .page.size-a6 .nfc-area { margin-top: 22px; }
+  .page.size-sticker .nfc-area { margin-top: 18px; }
+  .page .nfc-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  .page .nfc-line { width: 54px; height: 1px; background: var(--gold); }
+  .page.size-a6 .nfc-line { width: 36px; }
+  .page.size-sticker .nfc-line { width: 28px; }
+  .page .nfc-icon { width: 40px; height: 40px; color: var(--gold); }
+  .page.size-a5 .nfc-icon { width: 30px; height: 30px; }
+  .page.size-a6 .nfc-icon { width: 24px; height: 24px; }
+  .page.size-sticker .nfc-icon { width: 22px; height: 22px; }
+  .page .nfc-icon path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  .page .nfc-title {
+    margin-top: 0;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: .16em;
+  }
+  .page.size-a5 .nfc-title { font-size: 12px; }
+  .page.size-a6 .nfc-title { font-size: 10px; }
+  .page.size-sticker .nfc-title { font-size: 9px; }
+  .page .tap-text {
+    margin-top: 9px;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: .18em;
+    white-space: nowrap;
+  }
+  .page.size-a5 .tap-text { font-size: 11px; margin-top: 6px; }
+  .page.size-a6 .tap-text { font-size: 9px; margin-top: 5px; letter-spacing: .14em; }
+  .page.size-sticker .tap-text { font-size: 8px; margin-top: 4px; letter-spacing: .12em; }
+  .sign-id { display: none; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: rgba(29,29,31,0.92);
+    color: #fff;
+    padding: 11px 18px;
+    border-radius: 980px;
+    font-size: 0.86rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    opacity: 0;
+    pointer-events: none;
+    transition: .22s ease;
+    z-index: 30;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Login gate */
+  #loginScreen {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 32px 18px;
+    background:
+      radial-gradient(900px 480px at 50% 0%, #fff 0%, transparent 60%),
+      var(--bg);
+  }
+  #loginScreen[hidden],
+  #adminApp[hidden] { display: none !important; }
+  .login-card {
+    width: min(400px, 100%);
+    background: rgba(255,255,255,0.86);
+    border: 1px solid rgba(255,255,255,0.65);
+    border-radius: 24px;
+    padding: 32px 28px 28px;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  .login-card h1 {
+    margin: 0 0 8px;
+    font-family: var(--display);
+    font-size: 1.7rem;
+    font-weight: 680;
+    letter-spacing: -0.035em;
+    text-align: center;
+  }
+  .login-card .sub {
+    margin: 0 0 22px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+    text-align: center;
+  }
+  .login-error {
+    display: none;
+    margin: 14px 0 0;
+    padding: 11px 12px;
+    border-radius: 12px;
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-size: 0.86rem;
+    letter-spacing: -0.01em;
+  }
+  .login-error.is-on { display: block; }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .user-chip {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink);
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 980px;
+    background: rgba(0,0,0,0.05);
+    letter-spacing: -0.01em;
+  }
+
+  @media print {
+    @page { size: auto; margin: 0; }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 0 !important;
+      background: #f7f2e9 !important;
+      overflow: visible !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body * { visibility: hidden !important; }
+    #sign, #sign * { visibility: visible !important; }
+    #loginScreen,
+    #adminApp,
+    .toast,
+    .modal-bar,
+    .no-print,
+    .size-tabs,
+    .actions { display: none !important; }
+
+    .modal,
+    .modal.is-on,
+    .modal-inner,
+    .sign-stage {
+      display: block !important;
+      position: static !important;
+      inset: auto !important;
+      width: auto !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: #f7f2e9 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      overflow: visible !important;
+      place-items: unset !important;
+    }
+
+    #sign.page {
+      position: relative !important;
+      left: 0 !important;
+      top: 0 !important;
+      margin: 0 auto !important;
+      box-shadow: none !important;
+      background: #f7f2e9 !important;
+      overflow: hidden !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    .page.size-a4 { width: 210mm !important; height: 297mm !important; max-height: 297mm !important; }
+    .page.size-a5 { width: 148mm !important; height: 210mm !important; max-height: 210mm !important; }
+    .page.size-a6 { width: 105mm !important; height: 148mm !important; max-height: 148mm !important; }
+    .page.size-sticker { width: 100mm !important; height: 140mm !important; max-height: 140mm !important; }
+  }
+</style>
+</head>
+<body>
+  <div id="loginScreen">
+    <div class="login-card">
+      <h1>Admin sign in</h1>
+      <p class="sub">Sign in to manage facilities and print signs.</p>
+      <form id="loginForm">
+        <label for="loginUser">Username</label>
+        <input id="loginUser" name="username" autocomplete="username" required autofocus>
+
+        <label for="loginPass">Password</label>
+        <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
+
+        <button class="btn btn-primary" type="submit" id="loginBtn">Sign in</button>
+        <div class="login-error" id="loginError"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminApp" hidden>
+  <header>
+    <div>
+      <h1>Facility Feedback Admin</h1>
+      <p>Create facilities and printable feedback signs.</p>
+    </div>
+    <div class="header-actions">
+      <span class="user-chip" id="userChip">Signed in</span>
+      <a class="btn btn-ghost btn-sm" href="ff.html" target="_blank">Open guest form</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn">Sign out</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <aside class="panel">
+      <h2>Add Facility</h2>
+      <form id="createForm">
+        <label for="typeCode">Facility type</label>
+        <select id="typeCode" required></select>
+
+        <label for="name">Facility name</label>
+        <input id="name" placeholder="e.g. Prayer Room" required>
+
+        <label for="property">Property</label>
+        <input id="property" placeholder="e.g. Resort A" required>
+
+        <label for="location">Location</label>
+        <input id="location" placeholder="e.g. Lobby – Level 1" required>
+
+        <div class="row2">
+          <div>
+            <label for="building">Building</label>
+            <input id="building" placeholder="Optional">
+          </div>
+          <div>
+            <label for="floor">Floor</label>
+            <input id="floor" placeholder="Optional">
+          </div>
+        </div>
+
+        <label for="zone">Zone / Area</label>
+        <input id="zone" placeholder="Optional">
+
+        <label for="notes">Internal notes</label>
+        <textarea id="notes" placeholder="Installer notes, NFC UID, etc."></textarea>
+
+        <button class="btn btn-primary" type="submit">Create facility</button>
+      </form>
+    </aside>
+
+    <main class="panel">
+      <h2>Facilities</h2>
+      <div class="settings-inline">
+        <div>
+          <label for="baseUrl">Public feedback base URL</label>
+          <input id="baseUrl" placeholder="https://feedback.yourdomain.com  (or …/ff.html for local)">
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="saveSettings">Save URL</button>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Search name, ID, property…">
+        <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">Export JSON</button>
+        <label class="btn btn-ghost btn-sm" style="margin:0; cursor:pointer;">
+          Import JSON
+          <input type="file" id="importFile" accept="application/json" hidden>
+        </label>
+      </div>
+      <div id="list"></div>
+    </main>
+  </div>
+  </div>
+
+  <div class="modal" id="printModal" role="dialog" aria-modal="true">
+    <div class="modal-inner">
+      <div class="modal-bar no-print">
+        <div>
+          <strong id="modalTitle">Sign PDF</strong>
+          <div class="muted" id="modalUrls" style="font-size:0.78rem; margin-top:4px;"></div>
+        </div>
+        <div class="size-tabs">
+          <button type="button" class="btn btn-ghost btn-sm is-on" data-size="a4">A4</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-size="a5">A5</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-size="a6">A6</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-size="sticker">Sticker</button>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="copyQrUrl">Copy QR URL</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="copyNfcUrl">Copy NFC URL</button>
+          <button type="button" class="btn btn-primary btn-sm" id="pdfBtn" style="width:auto;">Download PDF</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="printBtn" style="width:auto;">Print…</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="closeModal">Close</button>
+        </div>
+      </div>
+
+      <div class="sign-stage">
+        <main class="page size-a4" id="sign">
+          <svg class="frame" viewBox="0 0 1000 1400" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M54 10 H946 C946 34 966 54 990 54 V1346 C966 1346 946 1366 946 1390 H54 C54 1366 34 1346 10 1346 V54 C34 54 54 34 54 10 Z"/>
+          </svg>
+
+          <div class="lotus-row">
+            <div class="lotus-line"></div>
+            <svg class="lotus" viewBox="0 0 60 45" aria-hidden="true">
+              <path d="M30 40 C20 32 18 22 30 7 C42 22 40 32 30 40"/>
+              <path d="M28 40 C17 39 9 32 7 22 C18 22 26 29 28 40"/>
+              <path d="M32 40 C43 39 51 32 53 22 C42 22 34 29 32 40"/>
+              <path d="M27 41 C15 44 6 40 3 31 C14 29 23 33 27 41"/>
+              <path d="M33 41 C45 44 54 40 57 31 C46 29 37 33 33 41"/>
+            </svg>
+            <div class="lotus-line"></div>
+          </div>
+
+          <div class="small-title">HOW WAS THE</div>
+          <div class="main-title" id="signName">PRAYER ROOM?</div>
+
+          <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-dot"></div>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="ratings">
+            <div class="rating">
+              <div class="rating-circle">
+                <svg class="feedback-icon" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="#173B30" fill-rule="evenodd" d="M51 192L55 191H125L126 192V471L125 472H61L60 473L53 472L40 465L33 456L30 446V218L32 210L36 203L42 197ZM323 31H331L341 35L350 43L354 50L356 57V112L355 113V122L354 123L353 135L345 162L333 186L312 215V221L314 225L320 229H463L470 232L477 239L481 249V256L477 266L470 273L463 276H395L391 278L388 282V290L394 296H446L453 298L463 307L466 313V319L467 320L466 321V327L463 333L455 341L446 344H375L370 349L369 356L370 359L374 363L377 364H430L437 367L445 375L448 383L447 396L442 404L433 410L430 411H359L353 414L351 418L352 427L355 430L360 432H385L386 431L413 432L419 435L426 442L430 453L428 465L424 472L419 477L410 481H284L283 480H271L270 479H263L262 478H256L235 474L192 463L188 461L177 459L173 457L158 454L154 452L147 451L145 449V217L166 206H168L189 195H191L209 185L230 170L251 149L258 140L273 116L303 47L313 35ZM355 18L348 14L335 10H319L311 12L300 18L290 28L283 39L276 54L263 89L252 111L236 134L211 158L196 168L149 192L147 194L143 181L137 175L131 172H52L35 178L29 182L18 194L13 204L10 215V451L13 462L17 470L22 477L31 485L45 492L54 494H129L135 492L142 486L144 483L146 474L149 473L225 493L261 500H268L269 501H279L280 502H415L429 497L435 493L444 483L450 469L451 452L448 441L442 432L451 427L459 420L464 413L469 399V382L467 375L461 364L474 356L480 349L485 340L488 328V318L484 304L478 295L484 291L496 278L502 262V248L499 237L493 226L483 216L471 210L459 209L458 208H345L344 207L354 191L367 162V159L372 144L374 128L375 127V120L376 119L377 89L376 88V52L375 47L367 30Z"/></svg>
+              </div>
+              <div class="rating-label">GOOD</div>
+            </div>
+            <div class="vertical-line"></div>
+            <div class="rating">
+              <div class="rating-circle">
+                <svg class="feedback-icon down" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><g transform="rotate(180 256 256)"><path fill="#173B30" fill-rule="evenodd" d="M51 192L55 191H125L126 192V471L125 472H61L60 473L53 472L40 465L33 456L30 446V218L32 210L36 203L42 197ZM323 31H331L341 35L350 43L354 50L356 57V112L355 113V122L354 123L353 135L345 162L333 186L312 215V221L314 225L320 229H463L470 232L477 239L481 249V256L477 266L470 273L463 276H395L391 278L388 282V290L394 296H446L453 298L463 307L466 313V319L467 320L466 321V327L463 333L455 341L446 344H375L370 349L369 356L370 359L374 363L377 364H430L437 367L445 375L448 383L447 396L442 404L433 410L430 411H359L353 414L351 418L352 427L355 430L360 432H385L386 431L413 432L419 435L426 442L430 453L428 465L424 472L419 477L410 481H284L283 480H271L270 479H263L262 478H256L235 474L192 463L188 461L177 459L173 457L158 454L154 452L147 451L145 449V217L166 206H168L189 195H191L209 185L230 170L251 149L258 140L273 116L303 47L313 35ZM355 18L348 14L335 10H319L311 12L300 18L290 28L283 39L276 54L263 89L252 111L236 134L211 158L196 168L149 192L147 194L143 181L137 175L131 172H52L35 178L29 182L18 194L13 204L10 215V451L13 462L17 470L22 477L31 485L45 492L54 494H129L135 492L142 486L144 483L146 474L149 473L225 493L261 500H268L269 501H279L280 502H415L429 497L435 493L444 483L450 469L451 452L448 441L442 432L451 427L459 420L464 413L469 399V382L467 375L461 364L474 356L480 349L485 340L488 328V318L484 304L478 295L484 291L496 278L502 262V248L499 237L493 226L483 216L471 210L459 209L458 208H345L344 207L354 191L367 162V159L372 144L374 128L375 127V120L376 119L377 89L376 88V52L375 47L367 30Z"/></g></svg>
+              </div>
+              <div class="rating-label">NOT GOOD</div>
+            </div>
+          </div>
+
+          <div class="divider lower-divider">
+            <div class="divider-line"></div>
+            <div class="divider-dot"></div>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="qr-frame">
+            <div id="signQr"></div>
+          </div>
+
+          <div class="nfc-area">
+            <div class="nfc-row">
+              <div class="nfc-line"></div>
+              <svg class="nfc-icon" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 17 C12 20 12 23 8 26"/>
+                <path d="M14 11 C22 17 22 25 14 31"/>
+                <path d="M21 6 C33 15 33 27 21 36"/>
+              </svg>
+              <div class="nfc-line"></div>
+            </div>
+            <div class="nfc-title">NFC</div>
+            <div class="tap-text">TAP YOUR PHONE</div>
+          </div>
+          <div class="sign-id" id="signId"></div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const typeSelect = document.getElementById('typeCode');
+  const form = document.getElementById('createForm');
+  const listEl = document.getElementById('list');
+  const searchEl = document.getElementById('search');
+  const baseUrlEl = document.getElementById('baseUrl');
+  const toast = document.getElementById('toast');
+  const modal = document.getElementById('printModal');
+  const sign = document.getElementById('sign');
+  let currentFacility = null;
+  let currentUrls = null;
+  let qrInstance = null;
+  let signSize = 'a4';
+
+  Object.values(FacilityKit.FACILITY_TYPES).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.code;
+    opt.textContent = t.name + ' (' + t.code + ')';
+    typeSelect.appendChild(opt);
+  });
+
+  function toastMsg(msg) {
+    toast.textContent = msg;
+    toast.classList.add('is-on');
+    setTimeout(() => toast.classList.remove('is-on'), 1800);
+  }
+
+  function syncNamePlaceholder() {
+    const t = FacilityKit.FACILITY_TYPES[typeSelect.value];
+    if (t && !form.name.value) form.name.placeholder = t.name;
+  }
+  typeSelect.addEventListener('change', () => {
+    const t = FacilityKit.FACILITY_TYPES[typeSelect.value];
+    if (t) form.name.value = t.name;
+    syncNamePlaceholder();
+  });
+  syncNamePlaceholder();
+  const first = FacilityKit.FACILITY_TYPES[typeSelect.value];
+  if (first) form.name.value = first.name;
+
+  const settings = FacilityKit.loadSettings();
+  baseUrlEl.value = settings.baseUrl || '';
+
+  document.getElementById('saveSettings').addEventListener('click', () => {
+    FacilityKit.saveSettings({
+      baseUrl: baseUrlEl.value.trim(),
+      feedbackPath: 'ff.html'
+    });
+    toastMsg('Base URL saved');
+    renderList();
+  });
+
+  let facilitiesCache = [];
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+    try {
+      const facility = await FacilitySupabase.createFacility({
+        typeCode: typeSelect.value,
+        name: form.name.value,
+        property: form.property.value,
+        location: form.location.value,
+        building: form.building.value,
+        floor: form.floor.value,
+        zone: form.zone.value,
+        notes: form.notes.value
+      });
+      form.location.value = '';
+      form.building.value = '';
+      form.floor.value = '';
+      form.zone.value = '';
+      form.notes.value = '';
+      await renderList();
+      toastMsg('Created ' + facility.id);
+      openPrint._autoPdf = true;
+      openPrint(facility);
+    } catch (err) {
+      console.error(err);
+      const msg = err.message || String(err);
+      if (/unauthorized|sign in|session/i.test(msg)) showLogin(msg);
+      alert('Could not create facility: ' + msg);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create facility';
+    }
+  });
+
+  async function renderList() {
+    const q = (searchEl.value || '').trim().toLowerCase();
+    listEl.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      facilitiesCache = await FacilitySupabase.listFacilities();
+    } catch (err) {
+      console.error(err);
+      listEl.innerHTML = '<div class="empty">Could not load facilities from Supabase.<br><small>' + esc(err.message || err) + '</small><br>Run supabase-facility-feedback.sql and supabase-facility-admin-auth.sql first.</div>';
+      return;
+    }
+
+    const items = facilitiesCache.filter(f => {
+      if (!q) return true;
+      return [f.id, f.name, f.property, f.location, f.typeName, f.zone, f.building]
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+    });
+
+    if (!items.length) {
+      listEl.innerHTML = '<div class="empty">No facilities yet. Create one on the left.</div>';
+      return;
+    }
+
+    const rows = items.map(f => {
+      const meta = [f.property, f.location, f.building, f.floor, f.zone].filter(Boolean).join(' · ');
+      return '<tr>' +
+        '<td><div class="id">' + esc(f.id) + '</div><div class="muted">' + esc(f.typeName) + '</div></td>' +
+        '<td><div><strong>' + esc(f.name) + '</strong></div>' +
+        (meta ? '<div class="muted">' + esc(meta) + '</div>' : '') +
+        '</td>' +
+        '<td class="actions">' +
+          '<button type="button" class="btn btn-primary btn-sm" style="width:auto;" data-regen="' + esc(f.id) + '">Regenerate / Print</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-pdf="' + esc(f.id) + '">Download PDF</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-copy-qr="' + esc(f.id) + '">Copy QR</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-copy-nfc="' + esc(f.id) + '">Copy NFC</button>' +
+          '<button type="button" class="btn btn-danger btn-sm" data-del="' + esc(f.id) + '">Delete</button>' +
+        '</td></tr>';
+    }).join('');
+
+    listEl.innerHTML = '<table><thead><tr><th>ID</th><th>Details</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  listEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.dataset.regen) {
+      const f = facilitiesCache.find(x => x.id === btn.dataset.regen);
+      if (f) openPrint(f);
+    }
+    if (btn.dataset.pdf) {
+      const f = facilitiesCache.find(x => x.id === btn.dataset.pdf);
+      if (f) {
+        openPrint._autoPdf = true;
+        openPrint(f);
+      }
+    }
+    if (btn.dataset.copyQr) {
+      const u = FacilityKit.urlsFor(btn.dataset.copyQr);
+      copyText(u.qr);
+    }
+    if (btn.dataset.copyNfc) {
+      const u = FacilityKit.urlsFor(btn.dataset.copyNfc);
+      copyText(u.nfc);
+    }
+    if (btn.dataset.del) {
+      if (confirm('Delete ' + btn.dataset.del + '?')) {
+        try {
+          await FacilitySupabase.deleteFacility(btn.dataset.del);
+          await renderList();
+          toastMsg('Deleted');
+        } catch (err) {
+          alert('Delete failed: ' + (err.message || err));
+        }
+      }
+    }
+  });
+
+  searchEl.addEventListener('input', () => renderList());
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => toastMsg('Copied')).catch(() => {
+      prompt('Copy URL:', text);
+    });
+  }
+
+  function openPrint(facilityOrId) {
+    currentFacility = typeof facilityOrId === 'object'
+      ? facilityOrId
+      : (facilitiesCache.find(f => f.id === facilityOrId) || FacilityKit.getFacility(facilityOrId));
+    if (!currentFacility) return;
+    currentUrls = FacilityKit.urlsFor(currentFacility.id);
+    document.getElementById('modalTitle').textContent = 'Sign PDF · ' + currentFacility.id;
+    document.getElementById('modalUrls').textContent =
+      (currentFacility.name || currentFacility.typeName || '') +
+      (currentFacility.property ? ' · ' + currentFacility.property : '');
+    document.getElementById('signName').textContent = (currentFacility.name || currentFacility.typeName).toUpperCase() + '?';
+    document.getElementById('signId').textContent = currentFacility.id;
+    fitTitle();
+    setSignSize(signSize);
+    modal.classList.add('is-on');
+    // Wait for layout + QR, then ready for PDF
+    requestAnimationFrame(() => {
+      renderQr(currentUrls.qr);
+      if (openPrint._autoPdf) {
+        openPrint._autoPdf = false;
+        setTimeout(() => downloadPdf(), 350);
+      }
+    });
+  }
+
+  function setSignSize(size) {
+    signSize = size;
+    sign.classList.remove('size-a4', 'size-a5', 'size-a6', 'size-sticker');
+    sign.classList.add('size-' + size);
+    document.querySelectorAll('.size-tabs button').forEach(b => {
+      b.classList.toggle('is-on', b.dataset.size === size);
+    });
+    fitTitle();
+    if (currentUrls) requestAnimationFrame(() => renderQr(currentUrls.qr));
+  }
+
+  function renderQr(url) {
+    const box = document.getElementById('signQr');
+    box.innerHTML = '';
+    const frame = box.parentElement.getBoundingClientRect();
+    // Generate denser QR for crisp print (2x display size, min 220)
+    const cssPx = Math.max(90, Math.floor(Math.min(frame.width, frame.height) * 0.96));
+    const px = Math.max(220, cssPx * 2);
+    qrInstance = new QRCode(box, {
+      text: url,
+      width: px,
+      height: px,
+      correctLevel: QRCode.CorrectLevel.H,
+      colorDark: '#173b30',
+      colorLight: '#ffffff'
+    });
+  }
+
+  function fitTitle() {
+    const el = document.getElementById('signName');
+    const len = (el.textContent || '').length;
+    el.classList.toggle('is-long', len > 14);
+    el.classList.toggle('is-xl', len > 20);
+  }
+
+  document.querySelectorAll('.size-tabs button').forEach(b => {
+    b.addEventListener('click', () => setSignSize(b.dataset.size));
+  });
+  document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('is-on'));
+  const PAGE_MM = {
+    a4: [210, 297],
+    a5: [148, 210],
+    a6: [105, 148],
+    sticker: [100, 140]
+  };
+
+  function svgToPngDataUrl(svgEl, px) {
+    const clone = svgEl.cloneNode(true);
+    clone.setAttribute('width', String(px));
+    clone.setAttribute('height', String(px));
+    const xml = new XMLSerializer().serializeToString(clone);
+    const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = px;
+          c.height = px;
+          const ctx = c.getContext('2d');
+          ctx.clearRect(0, 0, px, px);
+          ctx.drawImage(img, 0, 0, px, px);
+          resolve(c.toDataURL('image/png'));
+        } catch (err) { reject(err); }
+      };
+      img.onerror = () => reject(new Error('Could not rasterize icon'));
+      img.src = svgUrl;
+    });
+  }
+
+  async function rasterizeSvgEl(svg, outW, outH) {
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('width', String(outW));
+    clone.setAttribute('height', String(outH));
+    // Ensure stroke paints fully inside bitmap
+    clone.querySelectorAll('path').forEach(p => {
+      if (!p.getAttribute('stroke')) p.setAttribute('stroke', '#b99a52');
+      if (!p.getAttribute('fill')) p.setAttribute('fill', 'none');
+      if (!p.getAttribute('stroke-width')) p.setAttribute('stroke-width', '2.2');
+    });
+    const xml = new XMLSerializer().serializeToString(clone);
+    const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = outW;
+          c.height = outH;
+          const ctx = c.getContext('2d');
+          ctx.clearRect(0, 0, outW, outH);
+          ctx.drawImage(img, 0, 0, outW, outH);
+          resolve(c.toDataURL('image/png'));
+        } catch (err) { reject(err); }
+      };
+      img.onerror = () => reject(new Error('Could not rasterize SVG'));
+      img.src = svgUrl;
+    });
+  }
+
+  async function rasterizeIconsIn(root) {
+    const icons = Array.from(root.querySelectorAll('svg.feedback-icon'));
+    for (const svg of icons) {
+      const box = svg.getBoundingClientRect();
+      const size = Math.max(160, Math.round((box.width || 108) * 3));
+      const png = await rasterizeSvgEl(svg, size, size);
+      const img = document.createElement('img');
+      img.className = svg.getAttribute('class') || 'feedback-icon';
+      img.alt = '';
+      img.src = png;
+      img.style.width = (box.width || svg.clientWidth || 108) + 'px';
+      img.style.height = (box.height || svg.clientHeight || 108) + 'px';
+      svg.replaceWith(img);
+      await new Promise((resolve, reject) => {
+        if (img.complete) return resolve();
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+    }
+  }
+
+  async function rasterizeFrameIn(root) {
+    const frame = root.querySelector('svg.frame');
+    if (!frame) return;
+    const box = frame.getBoundingClientRect();
+    const outW = Math.max(400, Math.round((box.width || 700) * 2));
+    const outH = Math.max(560, Math.round((box.height || 990) * 2));
+    const png = await rasterizeSvgEl(frame, outW, outH);
+    const img = document.createElement('img');
+    img.className = 'frame';
+    img.alt = '';
+    img.src = png;
+    // Keep absolute inset positioning via CSS class .page img.frame
+    frame.replaceWith(img);
+    await new Promise((resolve, reject) => {
+      if (img.complete) return resolve();
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+  }
+
+  async function downloadPdf() {
+    if (!currentFacility || !window.html2canvas || !window.jspdf) {
+      alert('PDF library failed to load. Check your network and try again.');
+      return;
+    }
+    const btn = document.getElementById('pdfBtn');
+    const prev = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    const prevShadow = sign.style.boxShadow;
+    try {
+      if (currentUrls) renderQr(currentUrls.qr);
+      await new Promise(r => setTimeout(r, 160));
+
+      // Capture the live on-screen preview (same layout the user sees)
+      sign.style.boxShadow = 'none';
+      const prevOverflow = sign.style.overflow;
+      sign.style.overflow = 'visible';
+      await rasterizeIconsIn(sign);
+      await rasterizeFrameIn(sign);
+      await new Promise(r => setTimeout(r, 100));
+
+      const rect = sign.getBoundingClientRect();
+      const canvas = await html2canvas(sign, {
+        scale: 3,
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#f7f2e9',
+        logging: false,
+        imageTimeout: 15000,
+        scrollX: -window.scrollX,
+        scrollY: -window.scrollY,
+        x: 0,
+        y: 0
+      });
+      sign.style.overflow = prevOverflow;
+
+      const [w, h] = PAGE_MM[signSize] || PAGE_MM.a4;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: h >= w ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: [w, h],
+        compress: true
+      });
+      const img = canvas.toDataURL('image/png', 1.0);
+      // Fit image into page preserving aspect (avoid uneven crop on right/bottom)
+      const canvasRatio = canvas.width / canvas.height;
+      const pageRatio = w / h;
+      let drawW = w, drawH = h, ox = 0, oy = 0;
+      if (canvasRatio > pageRatio + 0.002) {
+        drawH = w / canvasRatio;
+        oy = (h - drawH) / 2;
+      } else if (canvasRatio < pageRatio - 0.002) {
+        drawW = h * canvasRatio;
+        ox = (w - drawW) / 2;
+      }
+      pdf.setFillColor(247, 242, 233);
+      pdf.rect(0, 0, w, h, 'F');
+      pdf.addImage(img, 'PNG', ox, oy, drawW, drawH, undefined, 'SLOW');
+      const safeName = String(currentFacility.name || currentFacility.id)
+        .replace(/[^a-z0-9-_]+/gi, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      pdf.save((currentFacility.id || 'facility') + '-' + safeName + '-' + signSize + '.pdf');
+      toastMsg('PDF downloaded');
+    } catch (err) {
+      console.error(err);
+      alert('Could not generate PDF: ' + (err.message || err));
+    } finally {
+      sign.style.boxShadow = prevShadow;
+      // Restore SVG icons after raster capture for crisp on-screen preview next time
+      if (currentFacility) {
+        // reopen paint by toggling size (reloads QR); icons stay as PNG which is fine for preview
+      }
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  }
+
+  function printSignClean() {
+    if (!currentFacility) return;
+    const pageSizes = {
+      a4: '210mm 297mm',
+      a5: '148mm 210mm',
+      a6: '105mm 148mm',
+      sticker: '100mm 140mm'
+    };
+    const sizeCss = pageSizes[signSize] || pageSizes.a4;
+    const clone = sign.cloneNode(true);
+    clone.id = 'sign';
+    clone.style.boxShadow = 'none';
+    clone.style.margin = '0 auto';
+
+    // Only take the printable-sign CSS (avoid admin UI / @media print rules)
+    const raw = Array.from(document.querySelectorAll('style')).map(s => s.textContent).join('\n');
+    const marker = '/* Printable sign';
+    let css = raw.includes(marker) ? raw.slice(raw.indexOf(marker)) : raw;
+    const cut = css.indexOf('.toast');
+    if (cut > 0) css = css.slice(0, cut);
+    // Strip any leftover @media print blocks
+    css = css.replace(/@media\s+print\s*\{[\s\S]*?\n\s*\}/g, '');
+
+    const html = [
+      '<!DOCTYPE html><html><head><meta charset="utf-8">',
+      '<title>' + (currentFacility.id || 'Sign') + '</title>',
+      '<style>',
+      'html,body{margin:0;padding:0;background:#f7f2e9;-webkit-print-color-adjust:exact;print-color-adjust:exact;}',
+      '@page{size:' + sizeCss + ';margin:0;}',
+      css,
+      '.page,.page.size-a4,.page.size-a5,.page.size-a6,.page.size-sticker{box-shadow:none!important;margin:0 auto!important;background:#f7f2e9!important;}',
+      '</style></head><body>',
+      clone.outerHTML,
+      '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.focus();window.print();},200);}</scr' + 'ipt>',
+      '</body></html>'
+    ].join('');
+
+    const win = window.open('', '_blank');
+    if (!win) {
+      let style = document.getElementById('printPageSizeStyle');
+      if (!style) {
+        style = document.createElement('style');
+        style.id = 'printPageSizeStyle';
+        document.head.appendChild(style);
+      }
+      style.textContent = '@media print { @page { size: ' + sizeCss + '; margin: 0; } }';
+      window.print();
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  }
+
+  document.getElementById('pdfBtn').addEventListener('click', () => downloadPdf());
+  document.getElementById('printBtn').addEventListener('click', () => printSignClean());
+  document.getElementById('copyQrUrl').addEventListener('click', () => currentUrls && copyText(currentUrls.qr));
+  document.getElementById('copyNfcUrl').addEventListener('click', () => currentUrls && copyText(currentUrls.nfc));
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('is-on'); });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({ facilities: facilitiesCache }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'facility-registry.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('importFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || !Array.isArray(data.facilities)) throw new Error('Invalid registry');
+      let n = 0;
+      for (const f of data.facilities) {
+        try {
+          const typeCode = f.typeCode || (f.id || '').split('-')[0];
+          const type = FacilityKit.FACILITY_TYPES[typeCode];
+          await FacilitySupabase.upsertFacility({
+            id: f.id,
+            typeCode,
+            typeName: f.typeName || (type && type.name) || typeCode,
+            name: f.name,
+            property: f.property,
+            location: f.location,
+            building: f.building,
+            floor: f.floor,
+            zone: f.zone,
+            notes: f.notes,
+            active: f.active !== false,
+            createdAt: f.createdAt || f.created_at
+          });
+          n++;
+        } catch (err) {
+          console.warn('Skip import row', f, err);
+        }
+      }
+      await renderList();
+      toastMsg('Imported ' + n + ' facilities');
+    } catch (err) {
+      alert('Import failed: ' + err.message);
+    }
+    e.target.value = '';
+  });
+
+  const loginScreen = document.getElementById('loginScreen');
+  const adminApp = document.getElementById('adminApp');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  const userChip = document.getElementById('userChip');
+
+  function friendlyLoginError(err) {
+    const raw = String((err && err.message) || err || '');
+    const lower = raw.toLowerCase();
+    if (!window.FacilitySupabase || typeof FacilitySupabase.login !== 'function') {
+      return 'Admin files are out of date. Hard-refresh this page (Cmd+Shift+R), or re-upload facility-supabase.js.';
+    }
+    if (lower.includes('failed to fetch') || lower.includes('network') || lower.includes('load failed')) {
+      return 'Could not reach the server. Check your connection and try again.';
+    }
+    if (lower.includes('invalid username') || lower.includes('invalid login') || lower.includes('wrong')) {
+      return 'Incorrect username or password.';
+    }
+    if (lower.includes('admin_login') || lower.includes('function') && lower.includes('does not exist') || lower.includes('404') || lower.includes('pgrst202')) {
+      return 'Login is not set up yet. Run supabase-facility-admin-auth.sql in Supabase, then try again.';
+    }
+    if (lower.includes('not a function') || lower.includes('undefined')) {
+      return 'Admin files are out of date. Hard-refresh this page (Cmd+Shift+R), or re-upload facility-supabase.js.';
+    }
+    if (lower.includes('unauthorized') || lower.includes('session')) {
+      return 'Please sign in again.';
+    }
+    // Keep short — never dump long JS stack text
+    if (raw.length > 120 || raw.includes('In \'') || raw.includes("In '")) {
+      return 'Sign-in failed. Check your username and password, then try again.';
+    }
+    return raw || 'Sign-in failed. Please try again.';
+  }
+
+  function showLogin(msg) {
+    adminApp.hidden = true;
+    loginScreen.hidden = false;
+    if (msg) {
+      loginError.textContent = msg;
+      loginError.classList.add('is-on');
+    } else {
+      loginError.textContent = '';
+      loginError.classList.remove('is-on');
+    }
+  }
+
+  function showAdmin(session) {
+    loginScreen.hidden = true;
+    adminApp.hidden = false;
+    userChip.textContent = session.displayName || session.username || 'Signed in';
+    renderList();
+  }
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.classList.remove('is-on');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Signing in…';
+    try {
+      if (!window.FacilitySupabase || typeof FacilitySupabase.login !== 'function') {
+        throw new Error('Admin files are out of date. Hard-refresh this page (Cmd+Shift+R), or re-upload facility-supabase.js.');
+      }
+      const session = await FacilitySupabase.login(
+        document.getElementById('loginUser').value.trim(),
+        document.getElementById('loginPass').value
+      );
+      document.getElementById('loginPass').value = '';
+      showAdmin(session);
+      toastMsg('Signed in');
+    } catch (err) {
+      console.error(err);
+      loginError.textContent = friendlyLoginError(err);
+      loginError.classList.add('is-on');
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Sign in';
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    try {
+      if (window.FacilitySupabase && typeof FacilitySupabase.logout === 'function') {
+        await FacilitySupabase.logout();
+      }
+    } catch (_) {}
+    showLogin();
+    toastMsg('Signed out');
+  });
+
+  (async function boot() {
+    try {
+      if (!window.FacilitySupabase || typeof FacilitySupabase.login !== 'function') {
+        showLogin('Admin files are out of date. Hard-refresh this page (Cmd+Shift+R), or re-upload facility-supabase.js.');
+        return;
+      }
+      const session = typeof FacilitySupabase.verifySession === 'function'
+        ? await FacilitySupabase.verifySession()
+        : null;
+      if (session) showAdmin(session);
+      else showLogin();
+    } catch (err) {
+      console.error(err);
+      showLogin(friendlyLoginError(err));
+    }
+  })();
+})();
+</script>
+</body>
+</html>
