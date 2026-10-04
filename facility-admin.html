@@ -11,6 +11,8 @@
 <script src="facility-types.js"></script>
 <script src="facility-supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <style>
   :root {
     --bg: #F3EEE6;
@@ -486,48 +488,170 @@
   }
   .toast.is-on { opacity: 1; }
 
+  /* Login gate */
+  #loginScreen {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 28px 16px;
+  }
+  #loginScreen[hidden],
+  #adminApp[hidden] { display: none !important; }
+  .login-card {
+    width: min(400px, 100%);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 28px 24px;
+    box-shadow: 0 16px 40px rgba(31,42,36,0.08);
+  }
+  .login-card h1 {
+    margin: 0 0 6px;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+  }
+  .login-card .sub {
+    margin: 0 0 18px;
+    color: var(--muted);
+    font-size: 0.86rem;
+    line-height: 1.45;
+  }
+  .login-error {
+    display: none;
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #F8E8E8;
+    color: var(--danger);
+    font-size: 0.84rem;
+  }
+  .login-error.is-on { display: block; }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .user-chip {
+    font-size: 0.78rem;
+    color: var(--muted);
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: #fff;
+  }
+
   @media print {
-    body * { visibility: hidden !important; }
-    .modal, .modal * { visibility: visible !important; }
-    .modal {
-      display: block !important;
-      position: static !important;
-      background: #fff !important;
-      padding: 0 !important;
-    }
-    .modal-inner {
-      box-shadow: none !important;
-      border: 0 !important;
+    /* Hide admin chrome — do NOT use visibility:hidden (it still consumes page space) */
+    html, body {
       margin: 0 !important;
       padding: 0 !important;
       width: auto !important;
+      height: auto !important;
+      min-height: 0 !important;
+      background: #fff !important;
+      overflow: visible !important;
+    }
+    body > #loginScreen,
+    body > #adminApp > header,
+    body > #adminApp > .wrap,
+    body > .toast {
+      display: none !important;
+    }
+
+    .modal,
+    .modal.is-on {
+      display: block !important;
+      position: static !important;
+      inset: auto !important;
+      width: auto !important;
+      height: auto !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: transparent !important;
+      overflow: visible !important;
+      place-items: unset !important;
+    }
+    .modal-inner {
+      display: block !important;
+      width: auto !important;
+      max-width: none !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
       border-radius: 0 !important;
-    }
-    .modal-bar, .no-print { display: none !important; }
-    .sign-stage { background: #fff !important; padding: 0 !important; }
-    .page {
-      margin: 0 auto;
       box-shadow: none !important;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-      page-break-after: avoid;
-      page-break-inside: avoid;
+      background: transparent !important;
+      overflow: visible !important;
     }
-    .page.size-a4 { width: 210mm; height: 297mm; }
-    .page.size-a5 { width: 148mm; height: 210mm; }
-    .page.size-a6 { width: 105mm; height: 148mm; }
-    .page.size-sticker { width: 100mm; height: 140mm; }
-    @page { size: A4 portrait; margin: 0; }
+    .modal-bar,
+    .no-print,
+    .size-tabs,
+    .actions {
+      display: none !important;
+    }
+    .sign-stage {
+      display: block !important;
+      background: transparent !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+      overflow: visible !important;
+    }
+
+    .page {
+      position: relative !important;
+      left: 0 !important;
+      top: 0 !important;
+      margin: 0 !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+      break-after: avoid !important;
+      page-break-after: avoid !important;
+    }
+    .page.size-a4 { width: 210mm !important; height: 297mm !important; max-height: 297mm !important; }
+    .page.size-a5 { width: 148mm !important; height: 210mm !important; max-height: 210mm !important; }
+    .page.size-a6 { width: 105mm !important; height: 148mm !important; max-height: 148mm !important; }
+    .page.size-sticker { width: 100mm !important; height: 140mm !important; max-height: 140mm !important; }
+
+    @page { margin: 0; }
   }
 </style>
 </head>
 <body>
+  <div id="loginScreen">
+    <div class="login-card">
+      <h1>Admin sign in</h1>
+      <p class="sub">Sign in to create facilities and regenerate printable feedback signs.</p>
+      <form id="loginForm">
+        <label for="loginUser">Username</label>
+        <input id="loginUser" name="username" autocomplete="username" required autofocus>
+
+        <label for="loginPass">Password</label>
+        <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
+
+        <button class="btn btn-primary" type="submit" id="loginBtn">Sign in</button>
+        <div class="login-error" id="loginError"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminApp" hidden>
   <header>
     <div>
       <h1>Facility Feedback Admin</h1>
       <p>Create facilities, auto-generate IDs, QR/NFC URLs, and printable signs.</p>
     </div>
-    <a class="btn btn-ghost btn-sm" href="facility-feedback.html" target="_blank">Open guest form</a>
+    <div class="header-actions">
+      <span class="user-chip" id="userChip">Signed in</span>
+      <a class="btn btn-ghost btn-sm" href="facility-feedback.html" target="_blank">Open guest form</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn">Sign out</button>
+    </div>
   </header>
 
   <div class="wrap">
@@ -587,12 +711,13 @@
       <div id="list"></div>
     </main>
   </div>
+  </div>
 
   <div class="modal" id="printModal" role="dialog" aria-modal="true">
     <div class="modal-inner">
       <div class="modal-bar no-print">
         <div>
-          <strong id="modalTitle">Print sign</strong>
+          <strong id="modalTitle">Sign PDF</strong>
           <div class="muted" id="modalUrls" style="font-size:0.78rem; margin-top:4px;"></div>
         </div>
         <div class="size-tabs">
@@ -604,7 +729,8 @@
         <div class="actions">
           <button type="button" class="btn btn-ghost btn-sm" id="copyQrUrl">Copy QR URL</button>
           <button type="button" class="btn btn-ghost btn-sm" id="copyNfcUrl">Copy NFC URL</button>
-          <button type="button" class="btn btn-primary btn-sm" id="printBtn" style="width:auto;">Print</button>
+          <button type="button" class="btn btn-primary btn-sm" id="pdfBtn" style="width:auto;">Download PDF</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="printBtn" style="width:auto;">Print…</button>
           <button type="button" class="btn btn-ghost btn-sm" id="closeModal">Close</button>
         </div>
       </div>
@@ -761,10 +887,13 @@
       form.notes.value = '';
       await renderList();
       toastMsg('Created ' + facility.id);
+      openPrint._autoPdf = true;
       openPrint(facility);
     } catch (err) {
       console.error(err);
-      alert('Could not create facility: ' + (err.message || err));
+      const msg = err.message || String(err);
+      if (/unauthorized|sign in|session/i.test(msg)) showLogin(msg);
+      alert('Could not create facility: ' + msg);
     } finally {
       btn.disabled = false;
       btn.textContent = 'Create facility';
@@ -778,7 +907,7 @@
       facilitiesCache = await FacilitySupabase.listFacilities();
     } catch (err) {
       console.error(err);
-      listEl.innerHTML = '<div class="empty">Could not load facilities from Supabase.<br><small>' + esc(err.message || err) + '</small><br>Run supabase-facility-feedback.sql first.</div>';
+      listEl.innerHTML = '<div class="empty">Could not load facilities from Supabase.<br><small>' + esc(err.message || err) + '</small><br>Run supabase-facility-feedback.sql and supabase-facility-admin-auth.sql first.</div>';
       return;
     }
 
@@ -803,7 +932,8 @@
         '<div class="muted">' + esc(f.property) + (f.location ? ' · ' + esc(f.location) : '') + '</div>' +
         '<div class="urls">QR: ' + esc(urls.qr) + '<br>NFC: ' + esc(urls.nfc) + '</div></td>' +
         '<td class="actions">' +
-          '<button type="button" class="btn btn-ghost btn-sm" data-print="' + esc(f.id) + '">Print sign</button>' +
+          '<button type="button" class="btn btn-primary btn-sm" style="width:auto;" data-regen="' + esc(f.id) + '">Regenerate / Print</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-pdf="' + esc(f.id) + '">Download PDF</button>' +
           '<button type="button" class="btn btn-ghost btn-sm" data-copy-qr="' + esc(f.id) + '">Copy QR</button>' +
           '<button type="button" class="btn btn-ghost btn-sm" data-copy-nfc="' + esc(f.id) + '">Copy NFC</button>' +
           '<button type="button" class="btn btn-danger btn-sm" data-del="' + esc(f.id) + '">Delete</button>' +
@@ -824,9 +954,16 @@
   listEl.addEventListener('click', async (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
-    if (btn.dataset.print) {
-      const f = facilitiesCache.find(x => x.id === btn.dataset.print);
+    if (btn.dataset.regen) {
+      const f = facilitiesCache.find(x => x.id === btn.dataset.regen);
       if (f) openPrint(f);
+    }
+    if (btn.dataset.pdf) {
+      const f = facilitiesCache.find(x => x.id === btn.dataset.pdf);
+      if (f) {
+        openPrint._autoPdf = true;
+        openPrint(f);
+      }
     }
     if (btn.dataset.copyQr) {
       const u = FacilityKit.urlsFor(btn.dataset.copyQr);
@@ -863,7 +1000,7 @@
       : (facilitiesCache.find(f => f.id === facilityOrId) || FacilityKit.getFacility(facilityOrId));
     if (!currentFacility) return;
     currentUrls = FacilityKit.urlsFor(currentFacility.id);
-    document.getElementById('modalTitle').textContent = 'Print sign · ' + currentFacility.id;
+    document.getElementById('modalTitle').textContent = 'Sign PDF · ' + currentFacility.id;
     document.getElementById('modalUrls').innerHTML =
       'QR: ' + esc(currentUrls.qr) + '<br>NFC: ' + esc(currentUrls.nfc);
     document.getElementById('signName').textContent = (currentFacility.name || currentFacility.typeName).toUpperCase() + '?';
@@ -871,8 +1008,14 @@
     fitTitle();
     setSignSize(signSize);
     modal.classList.add('is-on');
-    // Wait a tick so layout sizes are correct for QR pixels
-    requestAnimationFrame(() => renderQr(currentUrls.qr));
+    // Wait for layout + QR, then ready for PDF
+    requestAnimationFrame(() => {
+      renderQr(currentUrls.qr);
+      if (openPrint._autoPdf) {
+        openPrint._autoPdf = false;
+        setTimeout(() => downloadPdf(), 350);
+      }
+    });
   }
 
   function setSignSize(size) {
@@ -914,7 +1057,79 @@
     b.addEventListener('click', () => setSignSize(b.dataset.size));
   });
   document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('is-on'));
-  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  const PAGE_MM = {
+    a4: [210, 297],
+    a5: [148, 210],
+    a6: [105, 148],
+    sticker: [100, 140]
+  };
+
+  async function downloadPdf() {
+    if (!currentFacility || !window.html2canvas || !window.jspdf) {
+      alert('PDF library failed to load. Check your network and try again.');
+      return;
+    }
+    const btn = document.getElementById('pdfBtn');
+    const prev = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    try {
+      // Ensure QR is rendered at current size
+      if (currentUrls) renderQr(currentUrls.qr);
+      await new Promise(r => setTimeout(r, 120));
+
+      const canvas = await html2canvas(sign, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#f7f2e9',
+        logging: false,
+        imageTimeout: 0
+      });
+
+      const [w, h] = PAGE_MM[signSize] || PAGE_MM.a4;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: h >= w ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: [w, h],
+        compress: true
+      });
+      const img = canvas.toDataURL('image/png', 1.0);
+      pdf.addImage(img, 'PNG', 0, 0, w, h, undefined, 'FAST');
+      const safeName = String(currentFacility.name || currentFacility.id)
+        .replace(/[^a-z0-9-_]+/gi, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      pdf.save((currentFacility.id || 'facility') + '-' + safeName + '-' + signSize + '.pdf');
+      toastMsg('PDF downloaded');
+    } catch (err) {
+      console.error(err);
+      alert('Could not generate PDF: ' + (err.message || err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  }
+
+  document.getElementById('pdfBtn').addEventListener('click', () => downloadPdf());
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    let style = document.getElementById('printPageSizeStyle');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'printPageSizeStyle';
+      document.head.appendChild(style);
+    }
+    const pageSizes = {
+      a4: '210mm 297mm',
+      a5: '148mm 210mm',
+      a6: '105mm 148mm',
+      sticker: '100mm 140mm'
+    };
+    style.textContent = '@media print { @page { size: ' + (pageSizes[signSize] || pageSizes.a4) + '; margin: 0; } }';
+    requestAnimationFrame(() => window.print());
+  });
   document.getElementById('copyQrUrl').addEventListener('click', () => currentUrls && copyText(currentUrls.qr));
   document.getElementById('copyNfcUrl').addEventListener('click', () => currentUrls && copyText(currentUrls.nfc));
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('is-on'); });
@@ -966,7 +1181,71 @@
     e.target.value = '';
   });
 
-  renderList();
+  const loginScreen = document.getElementById('loginScreen');
+  const adminApp = document.getElementById('adminApp');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  const userChip = document.getElementById('userChip');
+
+  function showLogin(msg) {
+    adminApp.hidden = true;
+    loginScreen.hidden = false;
+    if (msg) {
+      loginError.textContent = msg;
+      loginError.classList.add('is-on');
+    } else {
+      loginError.textContent = '';
+      loginError.classList.remove('is-on');
+    }
+  }
+
+  function showAdmin(session) {
+    loginScreen.hidden = true;
+    adminApp.hidden = false;
+    userChip.textContent = session.displayName || session.username || 'Signed in';
+    renderList();
+  }
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.classList.remove('is-on');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Signing in…';
+    try {
+      const session = await FacilitySupabase.login(
+        document.getElementById('loginUser').value,
+        document.getElementById('loginPass').value
+      );
+      document.getElementById('loginPass').value = '';
+      showAdmin(session);
+      toastMsg('Signed in');
+    } catch (err) {
+      console.error(err);
+      loginError.textContent = err.message || 'Login failed';
+      loginError.classList.add('is-on');
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Sign in';
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await FacilitySupabase.logout();
+    showLogin();
+    toastMsg('Signed out');
+  });
+
+  (async function boot() {
+    try {
+      const session = await FacilitySupabase.verifySession();
+      if (session) showAdmin(session);
+      else showLogin();
+    } catch (err) {
+      console.error(err);
+      showLogin('Could not verify session. Run supabase-facility-admin-auth.sql in Supabase.');
+    }
+  })();
 })();
 </script>
 </body>
