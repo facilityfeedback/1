@@ -1,0 +1,3024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facility Feedback Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="facility-types.js?v=20261006m"></script>
+<script src="facility-supabase.js?v=20261006m"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f5f7;
+    --bg-elevated: rgba(255,255,255,0.72);
+    --ink: #1d1d1f;
+    --muted: #6e6e73;
+    --line: rgba(0,0,0,0.08);
+    --line-strong: rgba(0,0,0,0.12);
+    --fill: #ffffff;
+    --fill-secondary: #f5f5f7;
+    --blue: #0071e3;
+    --blue-press: #0077ed;
+    --danger: #ff3b30;
+    --danger-bg: rgba(255,59,48,0.08);
+    --shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+    --shadow-lg: 0 20px 40px rgba(0,0,0,0.12);
+    --radius: 18px;
+    --radius-sm: 12px;
+    --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #ffffff 0%, transparent 55%),
+      var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  }
+  header {
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--line);
+    background: var(--bg-elevated);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-family: var(--display);
+    font-size: 1.3rem;
+    font-weight: 650;
+    margin: 0;
+    letter-spacing: -0.03em;
+  }
+  header p {
+    margin: 3px 0 0;
+    color: var(--muted);
+    font-size: 0.84rem;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 28px 22px 72px;
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 960px) {
+    .wrap { grid-template-columns: 1fr; padding-top: 20px; }
+  }
+  .panel {
+    background: var(--fill);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 22px 22px 20px;
+    box-shadow: var(--shadow);
+  }
+  .panel h2 {
+    font-family: var(--display);
+    font-size: 1.05rem;
+    font-weight: 650;
+    margin: 0 0 16px;
+    letter-spacing: -0.025em;
+  }
+  label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--muted);
+    margin: 14px 0 6px;
+  }
+  label:first-of-type { margin-top: 0; }
+  input, select, textarea {
+    width: 100%;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    padding: 11px 13px;
+    font: inherit;
+    font-size: 0.95rem;
+    letter-spacing: -0.015em;
+    background: var(--fill);
+    color: var(--ink);
+    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  }
+  input::placeholder, textarea::placeholder { color: #a1a1a6; }
+  input:hover, select:hover, textarea:hover { border-color: rgba(0,0,0,0.2); }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 4px rgba(0,113,227,0.18);
+    background: #fff;
+  }
+  textarea { min-height: 76px; resize: vertical; }
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236e6e73' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .row2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .btn {
+    border: 0;
+    border-radius: 980px;
+    padding: 11px 18px;
+    font: inherit;
+    font-weight: 560;
+    font-size: 0.92rem;
+    letter-spacing: -0.015em;
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease, opacity .15s ease, border-color .15s ease;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    width: 100%;
+    margin-top: 18px;
+  }
+  .btn-primary:hover { background: var(--blue-press); }
+  .btn-ghost {
+    background: rgba(0,0,0,0.04);
+    border: 1px solid transparent;
+    color: var(--ink);
+  }
+  .btn-ghost:hover {
+    background: rgba(0,0,0,0.07);
+  }
+  .btn-danger {
+    background: var(--danger-bg);
+    border: 1px solid transparent;
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(255,59,48,0.14); }
+  .btn-sm {
+    padding: 7px 13px;
+    font-size: 0.8rem;
+    font-weight: 530;
+  }
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+    align-items: center;
+  }
+  .toolbar input[type="search"] {
+    max-width: 280px;
+    background: var(--fill-secondary);
+    border-color: transparent;
+  }
+  .toolbar input[type="search"]:focus {
+    background: #fff;
+  }
+  .settings-inline {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 14px;
+    background: var(--fill-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+  }
+  .settings-inline > div { flex: 1; min-width: 180px; }
+  .settings-inline label { margin-top: 0; }
+  .settings-inline input {
+    background: #fff;
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 14px 10px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: 0; }
+  th {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 560;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    padding-top: 4px;
+    padding-bottom: 10px;
+  }
+  .id {
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  td .muted { margin-top: 2px; font-size: 0.82rem; }
+  .muted { color: var(--muted); }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .actions .btn-primary { width: auto; margin-top: 0; }
+  .urls { display: none; }
+  .empty {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.95rem;
+  }
+
+  /* Print sign modal */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.36);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    z-index: 20;
+    padding: 24px;
+    overflow: auto;
+  }
+  .modal.is-on { display: grid; place-items: start center; }
+  .modal-inner {
+    background: rgba(255,255,255,0.96);
+    border-radius: 22px;
+    width: min(920px, 100%);
+    margin: 24px auto;
+    padding: 20px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255,255,255,0.5);
+  }
+  .modal-bar {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  #modalTitle {
+    font-family: var(--display);
+    font-size: 1.05rem;
+    font-weight: 650;
+    letter-spacing: -0.025em;
+  }
+  .size-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    background: var(--fill-secondary);
+    border-radius: 980px;
+  }
+  .size-tabs button {
+    border: 0 !important;
+    background: transparent;
+  }
+  .size-tabs button.is-on {
+    background: #fff !important;
+    color: var(--ink) !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* Printable sign — user template */
+  .sign-stage {
+    display: grid;
+    place-items: center;
+    background: #e8e8ed;
+    border-radius: 16px;
+    padding: 24px;
+    overflow: auto;
+  }
+
+  .page {
+    --cream: #f7f2e9;
+    --green: #173b30;
+    --gold: #b99a52;
+
+    position: relative;
+    width: min(100%, 794px);
+    aspect-ratio: 210 / 297;
+    background: var(--cream);
+    overflow: hidden;
+    padding: 90px 76px 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    box-shadow: 0 12px 40px rgba(0,0,0,.06);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+    color: var(--green);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .page.size-a4 { width: 210mm; height: 297mm; aspect-ratio: auto; }
+  .page.size-a5 {
+    width: 148mm; height: 210mm; aspect-ratio: auto;
+    padding: 56px 48px 42px;
+  }
+  .page.size-a6 {
+    width: 105mm; height: 148mm; aspect-ratio: auto;
+    padding: 40px 32px 30px;
+  }
+  .page.size-sticker {
+    width: 100mm; height: 140mm; aspect-ratio: auto;
+    padding: 36px 28px 28px;
+  }
+
+
+  .page .lotus-row {
+    margin-top: 28px;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+  }
+  .page.size-a5 .lotus-row { margin-top: 14px; gap: 12px; }
+  .page.size-a6 .lotus-row { margin-top: 10px; gap: 9px; }
+  .page.size-sticker .lotus-row { margin-top: 8px; gap: 8px; }
+  .page .lotus-line { width: 105px; height: 1px; background: var(--gold); }
+  .page.size-a5 .lotus-line { width: 70px; }
+  .page.size-a6 .lotus-line { width: 52px; }
+  .page.size-sticker .lotus-line { width: 44px; }
+  .page .lotus { width: 52px; height: 40px; color: var(--gold); }
+  .page.size-a5 .lotus { width: 36px; height: 28px; }
+  .page.size-a6 .lotus { width: 30px; height: 23px; }
+  .page.size-sticker .lotus { width: 26px; height: 20px; }
+  .page .lotus path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .page .small-title {
+    margin-top: 34px;
+    font-size: 25px;
+    font-weight: 400;
+    letter-spacing: .30em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .page.size-a5 .small-title { margin-top: 20px; font-size: 16px; letter-spacing: .24em; }
+  .page.size-a6 .small-title { margin-top: 14px; font-size: 12px; letter-spacing: .2em; }
+  .page.size-sticker .small-title { margin-top: 12px; font-size: 11px; letter-spacing: .18em; }
+
+  .page .main-title {
+    margin-top: 24px;
+    font-size: 72px;
+    font-weight: 300;
+    line-height: 1;
+    letter-spacing: -.045em;
+    white-space: nowrap;
+    text-align: center;
+    max-width: 100%;
+  }
+  .page.size-a5 .main-title { margin-top: 14px; font-size: 46px; }
+  .page.size-a6 .main-title { margin-top: 12px; font-size: 34px; }
+  .page.size-sticker .main-title { margin-top: 10px; font-size: 28px; }
+  .page .main-title.is-long { font-size: 52px; letter-spacing: -.03em; }
+  .page.size-a5 .main-title.is-long { font-size: 34px; }
+  .page.size-a6 .main-title.is-long { font-size: 24px; }
+  .page.size-sticker .main-title.is-long { font-size: 20px; }
+  .page .main-title.is-xl { font-size: 40px; white-space: normal; }
+  .page.size-a5 .main-title.is-xl { font-size: 28px; }
+  .page.size-a6 .main-title.is-xl { font-size: 18px; }
+  .page.size-sticker .main-title.is-xl { font-size: 16px; }
+
+  .page .divider {
+    width: 400px;
+    max-width: 72%;
+    display: flex;
+    align-items: center;
+    gap: 17px;
+    margin-top: 55px;
+    margin-bottom: 31px;
+  }
+  .page.size-a5 .divider { margin-top: 32px; margin-bottom: 20px; gap: 12px; }
+  .page.size-a6 .divider { margin-top: 22px; margin-bottom: 14px; gap: 9px; }
+  .page.size-sticker .divider { margin-top: 18px; margin-bottom: 12px; gap: 8px; }
+  .page .divider-line { flex: 1; height: 1px; background: var(--gold); }
+  .page .divider-dot {
+    width: 9px; height: 9px; flex-shrink: 0;
+    border-radius: 50%; background: var(--gold);
+  }
+  .page.size-a6 .divider-dot { width: 7px; height: 7px; }
+  .page.size-sticker .divider-dot { width: 6px; height: 6px; }
+  .page .lower-divider { margin-top: 39px; margin-bottom: 27px; }
+  .page.size-a5 .lower-divider { margin-top: 24px; margin-bottom: 16px; }
+  .page.size-a6 .lower-divider { margin-top: 16px; margin-bottom: 12px; }
+  .page.size-sticker .lower-divider { margin-top: 14px; margin-bottom: 10px; }
+
+  .page .ratings {
+    width: 100%;
+    max-width: 585px;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    column-gap: 30px;
+    align-items: center;
+  }
+  .page.size-a5 .ratings { column-gap: 18px; }
+  .page.size-a6 .ratings { column-gap: 12px; }
+  .page.size-sticker .ratings { column-gap: 10px; }
+  .page .rating {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .page .rating-circle {
+    width: 220px;
+    height: 220px;
+    border: 1.3px solid var(--green);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .page.size-a5 .rating-circle { width: 140px; height: 140px; }
+  .page.size-a6 .rating-circle { width: 100px; height: 100px; }
+  .page.size-sticker .rating-circle { width: 88px; height: 88px; }
+  .page .feedback-icon {
+    width: 108px;
+    height: 108px;
+    display: block;
+    overflow: visible;
+  }
+  .page.size-a5 .feedback-icon { width: 68px; height: 68px; }
+  .page.size-a6 .feedback-icon { width: 48px; height: 48px; }
+  .page.size-sticker .feedback-icon { width: 42px; height: 42px; }
+  .page .feedback-icon path { fill: #173B30; }
+  .page .vertical-line {
+    width: 1px;
+    height: 180px;
+    background: var(--gold);
+  }
+  .page.size-a5 .vertical-line { height: 110px; }
+  .page.size-a6 .vertical-line { height: 80px; }
+  .page.size-sticker .vertical-line { height: 70px; }
+  .page .rating-label {
+    margin-top: 18px;
+    font-size: 19px;
+    font-weight: 400;
+    letter-spacing: .15em;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .page.size-a5 .rating-label { margin-top: 12px; font-size: 13px; }
+  .page.size-a6 .rating-label { margin-top: 9px; font-size: 10px; letter-spacing: .12em; }
+  .page.size-sticker .rating-label { margin-top: 8px; font-size: 9px; letter-spacing: .1em; }
+
+  .page .qr-frame {
+    width: 147px;
+    height: 147px;
+    border: 1.25px solid var(--gold);
+    border-radius: 14px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    box-sizing: border-box;
+    line-height: 0;
+  }
+  .page.size-a5 .qr-frame { width: 110px; height: 110px; border-radius: 11px; padding: 8px; }
+  .page.size-a6 .qr-frame { width: 88px; height: 88px; border-radius: 10px; padding: 7px; }
+  .page.size-sticker .qr-frame { width: 78px; height: 78px; border-radius: 9px; padding: 6px; }
+  .page .qr-frame #signQr {
+    width: 100% !important;
+    height: 100% !important;
+    display: grid !important;
+    place-items: center;
+  }
+  .page .qr-frame #signQr img,
+  .page .qr-frame #signQr canvas {
+    width: 100% !important;
+    height: 100% !important;
+    image-rendering: pixelated;
+  }
+
+  .page .nfc-area {
+    margin-top: auto;
+    padding-top: 58px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .page.size-a5 .nfc-area { margin-top: 32px; }
+  .page.size-a6 .nfc-area { margin-top: 22px; }
+  .page.size-sticker .nfc-area { margin-top: 18px; }
+  .page .nfc-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  .page .nfc-line { width: 54px; height: 1px; background: var(--gold); }
+  .page.size-a6 .nfc-line { width: 36px; }
+  .page.size-sticker .nfc-line { width: 28px; }
+  .page .nfc-icon { width: 40px; height: 40px; color: var(--gold); }
+  .page.size-a5 .nfc-icon { width: 30px; height: 30px; }
+  .page.size-a6 .nfc-icon { width: 24px; height: 24px; }
+  .page.size-sticker .nfc-icon { width: 22px; height: 22px; }
+  .page .nfc-icon path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  .page .nfc-title {
+    margin-top: 0;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: .16em;
+  }
+  .page.size-a5 .nfc-title { font-size: 12px; }
+  .page.size-a6 .nfc-title { font-size: 10px; }
+  .page.size-sticker .nfc-title { font-size: 9px; }
+  .page .tap-text {
+    margin-top: 9px;
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: .18em;
+    white-space: nowrap;
+  }
+  .page.size-a5 .tap-text { font-size: 11px; margin-top: 6px; }
+  .page.size-a6 .tap-text { font-size: 9px; margin-top: 5px; letter-spacing: .14em; }
+  .page.size-sticker .tap-text { font-size: 8px; margin-top: 4px; letter-spacing: .12em; }
+  .sign-id { display: none; }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
+    background: rgba(29,29,31,0.92);
+    color: #fff;
+    padding: 11px 18px;
+    border-radius: 980px;
+    font-size: 0.86rem;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    opacity: 0;
+    pointer-events: none;
+    transition: .22s ease;
+    z-index: 30;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-lg);
+  }
+  .toast.is-on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Login gate */
+  #loginScreen {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 32px 18px;
+    background:
+      radial-gradient(900px 480px at 50% 0%, #fff 0%, transparent 60%),
+      var(--bg);
+  }
+  #loginScreen[hidden],
+  #adminApp[hidden] { display: none !important; }
+  .login-card {
+    width: min(400px, 100%);
+    background: rgba(255,255,255,0.86);
+    border: 1px solid rgba(255,255,255,0.65);
+    border-radius: 24px;
+    padding: 32px 28px 28px;
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+  }
+  .login-card h1 {
+    margin: 0 0 8px;
+    font-family: var(--display);
+    font-size: 1.7rem;
+    font-weight: 680;
+    letter-spacing: -0.035em;
+    text-align: center;
+  }
+  .login-card .sub {
+    margin: 0 0 22px;
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.45;
+    letter-spacing: -0.015em;
+    text-align: center;
+  }
+  .login-error {
+    display: none;
+    margin: 14px 0 0;
+    padding: 11px 12px;
+    border-radius: 12px;
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-size: 0.86rem;
+    letter-spacing: -0.01em;
+  }
+  .login-error.is-on { display: block; }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .user-chip {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--ink);
+    padding: 7px 12px;
+    border: 0;
+    border-radius: 980px;
+    background: rgba(0,0,0,0.05);
+    letter-spacing: -0.01em;
+  }
+
+  @media print {
+    @page { size: auto; margin: 0; }
+    html, body {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+      height: auto !important;
+      min-height: 0 !important;
+      background: #f7f2e9 !important;
+      overflow: visible !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body * { visibility: hidden !important; }
+    #sign, #sign * { visibility: visible !important; }
+    #loginScreen,
+    .app-nav,
+    #viewDashboard,
+    #editModal,
+    #adminApp,
+    .toast,
+    .modal-bar,
+    .no-print,
+    .size-tabs,
+    .actions { display: none !important; }
+
+    .modal,
+    .modal.is-on,
+    .modal-inner,
+    .sign-stage {
+      display: block !important;
+      position: static !important;
+      inset: auto !important;
+      width: auto !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: #f7f2e9 !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      overflow: visible !important;
+      place-items: unset !important;
+    }
+
+    #sign.page {
+      position: relative !important;
+      left: 0 !important;
+      top: 0 !important;
+      margin: 0 auto !important;
+      box-shadow: none !important;
+      background: #f7f2e9 !important;
+      overflow: hidden !important;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+      break-inside: avoid !important;
+      page-break-inside: avoid !important;
+    }
+    .page.size-a4 { width: 210mm !important; height: 297mm !important; max-height: 297mm !important; }
+    .page.size-a5 { width: 148mm !important; height: 210mm !important; max-height: 210mm !important; }
+    .page.size-a6 { width: 105mm !important; height: 148mm !important; max-height: 148mm !important; }
+    .page.size-sticker { width: 100mm !important; height: 140mm !important; max-height: 140mm !important; }
+  }
+  /* app-nav + dashboard */
+
+  .app-nav {
+    display: flex;
+    gap: 6px;
+    padding: 10px 28px 0;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+  .app-nav button {
+    border: 0;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.92rem;
+    font-weight: 560;
+    letter-spacing: -0.02em;
+    padding: 10px 14px 12px;
+    border-radius: 12px 12px 0 0;
+    cursor: pointer;
+    position: relative;
+  }
+  .app-nav button:hover { color: var(--ink); background: rgba(0,0,0,0.03); }
+  .app-nav button.is-on {
+    color: var(--ink);
+    background: transparent;
+  }
+  .app-nav button.is-on::after {
+    content: "";
+    position: absolute;
+    left: 12px; right: 12px; bottom: 0;
+    height: 2px;
+    background: var(--ink);
+    border-radius: 2px;
+  }
+  .view[hidden] { display: none !important; }
+
+  .dash-wrap {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 18px 22px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .dash-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: end;
+  }
+  .dash-pdf-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: var(--shadow);
+  }
+  .dash-pdf-banner strong {
+    font-size: 1.05rem;
+    letter-spacing: -0.02em;
+  }
+  .dash-pdf-banner span { font-size: 0.82rem; color: var(--ink); }
+  .dash-pdf-banner .muted { color: var(--muted); font-size: 0.75rem; }
+  .dash-toolbar label { margin-top: 0; }
+  .dash-toolbar select,
+  .dash-toolbar input {
+    min-width: 140px;
+    background: #fff;
+  }
+  .dash-hero {
+    display: block;
+  }
+  .score-card {
+    background:
+      radial-gradient(900px 320px at 0% 0%, rgba(0,113,227,0.11), transparent 55%),
+      radial-gradient(700px 260px at 100% 120%, rgba(52,199,89,0.09), transparent 52%),
+      var(--fill);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 22px 22px 18px;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 150px minmax(0, 1fr) auto;
+    gap: 20px;
+    align-items: center;
+  }
+  @media (max-width: 860px) {
+    .score-card {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      text-align: center;
+    }
+  }
+  .score-ring-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .score-ring-wrap { position: relative; width: 140px; height: 140px; }
+  .score-ring-wrap svg { width: 140px; height: 140px; display: block; transform: rotate(-90deg); }
+  .score-ring-center {
+    position: absolute; inset: 0;
+    display: grid; place-items: center;
+    text-align: center;
+    pointer-events: none;
+  }
+  .score-ring-center .big {
+    font-family: var(--display);
+    font-size: 2.2rem;
+    font-weight: 700;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    margin: 0;
+  }
+  .score-ring-center .tiny {
+    margin: 4px 0 0;
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-weight: 540;
+  }
+  .score-overall-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 980px;
+    background: rgba(0,0,0,0.05);
+    color: var(--ink);
+    font-size: 0.72rem;
+    font-weight: 620;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+  .score-copy { min-width: 0; }
+  .score-copy h3 {
+    margin: 0 0 6px;
+    font-size: 1.2rem;
+    font-weight: 680;
+    letter-spacing: -0.03em;
+  }
+  .score-copy p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.45;
+  }
+  .meta-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 11px; border-radius: 980px;
+    background: rgba(0,0,0,0.04);
+    font-size: 0.78rem; font-weight: 560; color: var(--ink);
+  }
+  .meta-chip em { font-style: normal; color: var(--muted); font-weight: 500; }
+  .meta-chip.good { background: rgba(52,199,89,0.12); color: #1b7a38; }
+  .meta-chip.warn { background: rgba(255,149,0,0.14); color: #9a5b00; }
+  .meta-chip.bad { background: rgba(255,59,48,0.12); color: #c41d16; }
+  .meta-chip.blue { background: rgba(0,113,227,0.12); color: #0058b0; }
+
+  .source-squares {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-self: center;
+  }
+  @media (max-width: 860px) {
+    .source-squares { width: min(240px, 100%); }
+  }
+  .source-square {
+    width: 96px;
+    height: 96px;
+    border-radius: 20px;
+    border: 1px solid rgba(0,0,0,0.06);
+    background: rgba(255,255,255,0.82);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 11px 11px 10px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .source-square:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+  }
+  .source-square::before {
+    content: "";
+    position: absolute;
+    inset: auto -30% -40% -30%;
+    height: 72%;
+    border-radius: 50%;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+  .source-square.qr::before { background: #0071e3; }
+  .source-square.nfc::before { background: #34c759; }
+  .source-square .s-label {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 650;
+    color: var(--muted);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    position: relative;
+  }
+  .source-square .s-value {
+    margin: 0;
+    font-family: var(--display);
+    font-size: 1.7rem;
+    font-weight: 730;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    position: relative;
+  }
+  .source-square .s-pct {
+    margin: 0;
+    font-size: 0.7rem;
+    font-weight: 620;
+    color: var(--muted);
+    position: relative;
+  }
+  .source-square .s-bar {
+    position: absolute;
+    left: 10px; right: 10px; bottom: 8px;
+    height: 3px;
+    border-radius: 980px;
+    background: rgba(0,0,0,0.06);
+    overflow: hidden;
+  }
+  .source-square .s-bar > i {
+    display: block; height: 100%; width: 0%;
+    border-radius: 980px;
+    transition: width .45s ease;
+  }
+  .source-square.qr .s-bar > i { background: #0071e3; }
+  .source-square.nfc .s-bar > i { background: #34c759; }
+  .source-square.qr .s-value { color: #0071e3; }
+  .source-square.nfc .s-value { color: #1b7a38; }
+
+  .attention-item.is-clickable,
+  .comment-card.is-clickable {
+    cursor: pointer;
+    transition: background .15s ease, transform .12s ease, box-shadow .15s ease;
+  }
+  .attention-item.is-clickable:hover,
+  .comment-card.is-clickable:hover {
+    background: rgba(0,113,227,0.06);
+    box-shadow: inset 0 0 0 1px rgba(0,113,227,0.14);
+  }
+
+  .filter-chip {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 2px;
+    padding: 8px 10px 8px 12px;
+    border-radius: 980px;
+    background: rgba(0,113,227,0.1);
+    color: #0058b0;
+    font-size: 0.8rem;
+    font-weight: 580;
+  }
+  .filter-chip.is-on { display: inline-flex; }
+  .filter-chip button {
+    border: 0;
+    background: rgba(0,113,227,0.14);
+    color: #0058b0;
+    border-radius: 980px;
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+  }
+  .filter-chip button:hover { background: rgba(0,113,227,0.22); }
+
+  .bar-row.is-clickable {
+    cursor: pointer;
+    padding: 8px 8px;
+    margin: 0 -8px;
+    border-radius: 12px;
+    transition: background .15s ease, transform .12s ease;
+  }
+  .bar-row.is-clickable:hover { background: rgba(0,113,227,0.06); }
+  .bar-row.is-clickable:active { transform: scale(0.995); }
+  .bar-row.is-selected {
+    background: rgba(0,113,227,0.1);
+    box-shadow: inset 0 0 0 1px rgba(0,113,227,0.18);
+  }
+  .bar-row.is-selected .name strong { color: #0058b0; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  @media (max-width: 1100px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 640px) { .kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+  .kpi {
+    background: var(--fill); border: 1px solid var(--line); border-radius: 18px;
+    padding: 16px 16px 14px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .kpi::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: var(--blue); opacity: 0.85;
+  }
+  .kpi.accent-green::before { background: #34c759; }
+  .kpi.accent-orange::before { background: #ff9500; }
+  .kpi.accent-red::before { background: #ff3b30; }
+  .kpi.accent-purple::before { background: #af52de; }
+  .kpi.accent-teal::before { background: #5ac8fa; }
+  .kpi .label { font-size: 0.72rem; font-weight: 560; color: var(--muted); margin: 0 0 8px; }
+  .kpi .value {
+    font-family: var(--display); font-size: 1.55rem; font-weight: 680;
+    letter-spacing: -0.04em; margin: 0; line-height: 1.05;
+  }
+  .kpi .sub { margin: 7px 0 0; font-size: 0.74rem; color: var(--muted); }
+
+  .dash-grid { display: grid; grid-template-columns: 1.35fr 1fr; gap: 14px; }
+  .dash-grid.equal { grid-template-columns: 1fr 1fr; }
+  .dash-grid.triple { grid-template-columns: 1.1fr 1fr 1fr; }
+  @media (max-width: 960px) {
+    .dash-grid, .dash-grid.equal, .dash-grid.triple { grid-template-columns: 1fr; }
+  }
+  .dash-card {
+    background: var(--fill); border: 1px solid var(--line); border-radius: 20px;
+    padding: 18px 18px 16px; box-shadow: var(--shadow); min-height: 240px;
+    display: flex; flex-direction: column;
+  }
+  .dash-card-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    gap: 10px; margin-bottom: 14px;
+  }
+  .dash-card h3 { margin: 0; font-size: 0.95rem; font-weight: 660; letter-spacing: -0.025em; }
+  .dash-card .head-note { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+
+  .bar-rows { display: flex; flex-direction: column; gap: 11px; flex: 1; }
+  .bar-row {
+    display: grid; grid-template-columns: minmax(84px, 120px) 1fr 48px;
+    gap: 10px; align-items: center; font-size: 0.8rem;
+  }
+  .bar-row.wide-label { grid-template-columns: minmax(120px, 1.25fr) 1.2fr 48px; }
+  .bar-row .name {
+    color: var(--muted); font-weight: 540; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .bar-row .name strong { color: var(--ink); font-weight: 620; display: block; font-size: 0.82rem; }
+  .bar-row .name small {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+    color: var(--muted); font-size: 0.7rem; margin-top: 3px;
+  }
+  .bar-row .name .meta-prop {
+    color: var(--muted); font-weight: 520;
+    max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .bar-row .name .stars-inline {
+    letter-spacing: 0.02em; color: #c9a227; font-size: 0.72rem; line-height: 1;
+  }
+  .bar-row .name .fac-badge {
+    display: inline-flex; align-items: center;
+    padding: 2px 7px; border-radius: 980px;
+    background: rgba(0,0,0,0.06); color: var(--ink);
+    font-size: 0.65rem; font-weight: 620; white-space: nowrap;
+  }
+  .bar-row .track { height: 9px; background: var(--fill-secondary); border-radius: 980px; overflow: hidden; }
+  .bar-row .fill {
+    height: 100%; border-radius: 980px;
+    background: linear-gradient(90deg, #0071e3, #5ac8fa); width: 0;
+    transition: width .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .bar-row .fill.green { background: linear-gradient(90deg, #34c759, #30d158); }
+  .bar-row .fill.orange { background: linear-gradient(90deg, #ff9500, #ffcc00); }
+  .bar-row .fill.red { background: linear-gradient(90deg, #ff3b30, #ff6961); }
+  .bar-row .fill.purple { background: linear-gradient(90deg, #af52de, #bf5af2); }
+  .bar-row .n {
+    display: flex; justify-content: flex-end; align-items: center;
+    font-variant-numeric: tabular-nums; font-weight: 620;
+  }
+  .bar-row .n-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 28px; height: 28px; padding: 0 7px;
+    border-radius: 980px;
+    background: rgba(0,0,0,0.06);
+    color: var(--ink);
+    font-size: 0.75rem; font-weight: 680;
+  }
+
+  .trend-svg { width: 100%; height: 188px; display: block; }
+  .donut-wrap {
+    display: grid; grid-template-columns: 150px 1fr; gap: 16px;
+    align-items: center; flex: 1;
+  }
+  @media (max-width: 520px) { .donut-wrap { grid-template-columns: 1fr; justify-items: center; } }
+  .donut-wrap svg { width: 140px; height: 140px; display: block; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  .donut-legend .leg.is-clickable {
+    cursor: pointer;
+    border-radius: 10px;
+    padding: 6px 8px;
+    margin: 0 -8px;
+    transition: background .15s ease;
+  }
+  .donut-legend .leg.is-clickable:hover { background: rgba(0,0,0,0.04); }
+  .donut-legend .leg.is-selected {
+    background: rgba(0,113,227,0.1);
+    box-shadow: inset 0 0 0 1px rgba(0,113,227,0.18);
+  }
+  .donut-arc {
+    cursor: pointer;
+    transition: stroke-opacity .15s ease, stroke-width .15s ease;
+  }
+  .donut-arc:hover { stroke-opacity: 0.85; }
+  .donut-arc.is-selected { stroke-width: 18; }
+  .donut-legend .leg {
+    display: grid; grid-template-columns: 10px 1fr auto; gap: 8px;
+    align-items: center; font-size: 0.8rem;
+  }
+  .donut-legend .swatch { width: 10px; height: 10px; border-radius: 50%; }
+  .donut-legend .leg-n { font-variant-numeric: tabular-nums; font-weight: 620; color: var(--ink); }
+
+  .issue-pills { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
+  .issue-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 12px; border-radius: 14px; background: var(--fill-secondary);
+    font-size: 0.8rem; font-weight: 530; border: 1px solid transparent;
+  }
+  .issue-pill .issue-count {
+    min-width: 22px; height: 22px; padding: 0 6px; border-radius: 980px;
+    background: rgba(0,113,227,0.12); color: #0058b0;
+    font-size: 0.72rem; font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  .attention-list { display: flex; flex-direction: column; gap: 10px; }
+  .attention-item {
+    display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+    align-items: start; padding: 12px; border-radius: 14px; background: var(--fill-secondary);
+  }
+  .attention-item .badge {
+    width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+    font-weight: 700; font-size: 0.95rem; letter-spacing: -0.03em;
+    background: rgba(255,59,48,0.12); color: #c41d16;
+  }
+  .attention-item .badge.mid { background: rgba(255,149,0,0.14); color: #9a5b00; }
+  .attention-item .title { font-weight: 620; font-size: 0.86rem; margin: 0 0 2px; }
+  .attention-item .snippet { margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+  .attention-item .when { font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
+
+  .comment-feed { display: flex; flex-direction: column; gap: 10px; max-height: 340px; overflow: auto; }
+  .comment-card {
+    padding: 12px 13px; border-radius: 14px; background: var(--fill-secondary);
+    border: 1px solid transparent;
+  }
+  .comment-card .top { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+  .comment-card .who { font-size: 0.78rem; font-weight: 620; }
+  .comment-card .body { margin: 0; font-size: 0.86rem; line-height: 1.45; }
+
+  .heatmap {
+    display: grid; grid-template-columns: 36px repeat(6, 1fr);
+    gap: 4px; align-items: center;
+  }
+  .heatmap .h-label { font-size: 0.65rem; color: var(--muted); text-align: right; }
+  .heatmap .h-cell { aspect-ratio: 1; border-radius: 5px; background: rgba(0,113,227,0.06); }
+  .heatmap .h-day { font-size: 0.65rem; color: var(--muted); text-align: center; }
+
+  .recent-table td { font-size: 0.84rem; }
+  .stars-inline { letter-spacing: 0.02em; color: #c9a227; font-size: 0.78rem; }
+  .source-chip {
+    display: inline-block; padding: 3px 8px; border-radius: 980px;
+    background: rgba(0,0,0,0.05); font-size: 0.72rem; font-weight: 560;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+  }
+  .source-chip.qr { background: rgba(0,113,227,0.1); color: #0058b0; }
+  .source-chip.nfc { background: rgba(52,199,89,0.12); color: #1b7a38; }
+  .source-chip.web { background: rgba(175,82,222,0.12); color: #7a2ea8; }
+  .pulse-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #34c759;
+    box-shadow: 0 0 0 0 rgba(52,199,89,0.5); animation: pulse 2s infinite;
+    display: inline-block;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(52,199,89,0.45); }
+    70% { box-shadow: 0 0 0 8px rgba(52,199,89,0); }
+    100% { box-shadow: 0 0 0 0 rgba(52,199,89,0); }
+  }
+  .app-nav { max-width: 1240px; }
+
+  .edit-modal .modal-inner {
+    max-width: 520px;
+    width: min(520px, calc(100vw - 32px));
+    padding: 22px;
+  }
+  .edit-modal .modal-bar {
+    margin-bottom: 8px;
+  }
+  .edit-modal .actions { margin-top: 8px; }
+  .edit-modal .btn-primary { width: auto; margin-top: 0; }
+  .id-readonly {
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    padding: 11px 13px;
+    background: var(--fill-secondary);
+    border-radius: 12px;
+  }
+</style>
+</head>
+<body>
+  <div id="loginScreen">
+    <div class="login-card">
+      <h1>Admin sign in</h1>
+      <p class="sub">Sign in to manage facilities and print signs.</p>
+      <form id="loginForm">
+        <label for="loginUser">Username</label>
+        <input id="loginUser" name="username" autocomplete="username" required autofocus>
+
+        <label for="loginPass">Password</label>
+        <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
+
+        <button class="btn btn-primary" type="submit" id="loginBtn">Sign in</button>
+        <div class="login-error" id="loginError"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="adminApp" hidden>
+  <header>
+    <div>
+      <h1>Facility Feedback Admin</h1>
+      <p id="headerSub">Create facilities and printable feedback signs.</p>
+    </div>
+    <div class="header-actions">
+      <span class="user-chip" id="userChip">Signed in</span>
+      <a class="btn btn-ghost btn-sm" href="ff.html" target="_blank">Open guest form</a>
+      <button type="button" class="btn btn-ghost btn-sm" id="logoutBtn">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="app-nav" aria-label="Admin sections">
+    <button type="button" class="is-on" data-view="facilities">Facilities</button>
+    <button type="button" data-view="dashboard">Dashboard</button>
+  </nav>
+
+  <div class="view" id="viewFacilities">
+  <div class="wrap">
+    <aside class="panel">
+      <h2>Add Facility</h2>
+      <form id="createForm">
+        <label for="typeCode">Facility type</label>
+        <select id="typeCode" required></select>
+
+        <label for="name">Facility name</label>
+        <input id="name" placeholder="e.g. Prayer Room" required>
+
+        <label for="property">Property</label>
+        <input id="property" placeholder="e.g. Resort A" required>
+
+        <label for="location">Location</label>
+        <input id="location" placeholder="e.g. Lobby – Level 1" required>
+
+        <div class="row2">
+          <div>
+            <label for="building">Building</label>
+            <input id="building" placeholder="Optional">
+          </div>
+          <div>
+            <label for="floor">Floor</label>
+            <input id="floor" placeholder="Optional">
+          </div>
+        </div>
+
+        <label for="zone">Zone / Area</label>
+        <input id="zone" placeholder="Optional">
+
+        <label for="notes">Internal notes</label>
+        <textarea id="notes" placeholder="Installer notes, NFC UID, etc."></textarea>
+
+        <button class="btn btn-primary" type="submit">Create facility</button>
+      </form>
+    </aside>
+
+    <main class="panel">
+      <h2>Facilities</h2>
+      <div class="settings-inline">
+        <div>
+          <label for="baseUrl">Public feedback base URL</label>
+          <input id="baseUrl" placeholder="https://feedback.yourdomain.com  (or …/ff.html for local)">
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="saveSettings">Save URL</button>
+      </div>
+      <div class="toolbar">
+        <input type="search" id="search" placeholder="Search name, ID, property…">
+        <button type="button" class="btn btn-ghost btn-sm" id="exportBtn">Export JSON</button>
+        <label class="btn btn-ghost btn-sm" style="margin:0; cursor:pointer;">
+          Import JSON
+          <input type="file" id="importFile" accept="application/json" hidden>
+        </label>
+      </div>
+      <div id="list"></div>
+    </main>
+  </div>
+  </div>
+  </div>
+
+  <div class="view" id="viewDashboard" hidden>
+    <div class="dash-wrap" id="dashReport">
+      <div class="dash-toolbar panel" style="padding:14px 16px;">
+        <div>
+          <label for="dashRange">Range</label>
+          <select id="dashRange">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="all">All time</option>
+          </select>
+        </div>
+        <div>
+          <label for="dashFacility">Facility</label>
+          <select id="dashFacility"><option value="">All facilities</option></select>
+        </div>
+        <div>
+          <label for="dashProperty">Property</label>
+          <select id="dashProperty"><option value="">All properties</option></select>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm pdf-hide" id="dashRefresh" style="margin-bottom:2px;">Refresh</button>
+        <button type="button" class="btn btn-primary btn-sm pdf-hide" id="dashSharePdf" style="margin-bottom:2px;width:auto;">Share PDF</button>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;padding-bottom:8px;">
+          <span class="pulse-dot" aria-hidden="true"></span>
+          <span class="muted" style="font-size:0.78rem;" id="dashUpdated">Live insights</span>
+        </div>
+      </div>
+
+      <div class="filter-chip" id="dashFilterChip">
+        <span id="dashFilterLabel">Filtered</span>
+        <button type="button" id="dashFilterClear" title="Clear filter" aria-label="Clear filter">×</button>
+      </div>
+
+      <div class="dash-hero">
+        <div class="score-card">
+          <div class="score-ring-col">
+            <div class="score-ring-wrap">
+              <svg viewBox="0 0 120 120" aria-hidden="true">
+                <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(0,0,0,0.06)" stroke-width="10"/>
+                <circle id="scoreRing" cx="60" cy="60" r="52" fill="none" stroke="#0071e3" stroke-width="10"
+                  stroke-linecap="round" stroke-dasharray="326.73" stroke-dashoffset="326.73"/>
+              </svg>
+              <div class="score-ring-center">
+                <div>
+                  <p class="big" id="scoreBig">—</p>
+                  <p class="tiny">/ 5.0</p>
+                </div>
+              </div>
+            </div>
+            <span class="score-overall-badge">Overall Score</span>
+          </div>
+          <div class="score-copy">
+            <h3 id="scoreTitle">Guest satisfaction</h3>
+            <p id="scoreBlurb">Waiting for responses in this period.</p>
+          </div>
+          <div class="source-squares" id="dashSources" aria-label="Response sources">
+            <div class="source-square qr">
+              <p class="s-label">QR</p>
+              <p class="s-value" id="srcQr">0</p>
+              <p class="s-pct" id="srcQrPct">0%</p>
+              <div class="s-bar" aria-hidden="true"><i id="srcQrBar"></i></div>
+            </div>
+            <div class="source-square nfc">
+              <p class="s-label">NFC</p>
+              <p class="s-value" id="srcNfc">0</p>
+              <p class="s-pct" id="srcNfcPct">0%</p>
+              <div class="s-bar" aria-hidden="true"><i id="srcNfcBar"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="dashKpis">
+        <div class="kpi"><p class="label">Responses</p><p class="value" id="kpiTotal">—</p><p class="sub" id="kpiTotalSub">Loading…</p></div>
+        <div class="kpi accent-green"><p class="label">Positive (4–5★)</p><p class="value" id="kpiPos">—</p><p class="sub" id="kpiPosSub">&nbsp;</p></div>
+        <div class="kpi accent-orange"><p class="label">Need attention (≤3★)</p><p class="value" id="kpiNeg">—</p><p class="sub" id="kpiNegSub">&nbsp;</p></div>
+        <div class="kpi accent-teal"><p class="label">Per day</p><p class="value" id="kpiRate">—</p><p class="sub" id="kpiRateSub">&nbsp;</p></div>
+        <div class="kpi accent-purple"><p class="label">With comments</p><p class="value" id="kpiComments">—</p><p class="sub" id="kpiCommentsSub">&nbsp;</p></div>
+        <div class="kpi accent-red"><p class="label">Facilities heard</p><p class="value" id="kpiHeard">—</p><p class="sub" id="kpiHeardSub">&nbsp;</p></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Response volume</h3><span class="head-note" id="trendNote">Last active days</span></div>
+          <div id="dashTrend"><div class="empty" style="padding:28px 8px;">No data yet</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Rating mix</h3><span class="head-note">Tap a score to filter</span></div>
+          <div id="dashRatings"><div class="empty" style="padding:28px 8px;">No data yet</div></div>
+        </div>
+      </div>
+
+      <div class="dash-grid triple">
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Facility leaderboard</h3><span class="head-note">Facilities in view</span></div>
+          <div id="dashFacilities" class="bar-rows"><div class="empty" style="padding:28px 8px;">No data yet</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>By property</h3><span class="head-note">Tap a property to filter</span></div>
+          <div id="dashProperties" class="bar-rows"><div class="empty" style="padding:28px 8px;">No data yet</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Top issues</h3><span class="head-note">From low ratings</span></div>
+          <div id="dashIssues" class="issue-pills"><div class="empty" style="padding:28px 8px;width:100%;text-align:center;">No issues reported</div></div>
+        </div>
+      </div>
+
+      <div class="dash-grid equal">
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Needs attention</h3><span class="head-note">Recent ≤3★ feedback</span></div>
+          <div id="dashAttention" class="attention-list"><div class="empty" style="padding:28px 8px;">Nothing urgent</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Guest comments</h3><span class="head-note">Latest written feedback</span></div>
+          <div id="dashComments" class="comment-feed"><div class="empty" style="padding:28px 8px;">No comments yet</div></div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Activity by hour & weekday</h3><span class="head-note">When guests respond</span></div>
+          <div id="dashHeat"><div class="empty" style="padding:28px 8px;">No data yet</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-head"><h3>Facility type mix</h3><span class="head-note">Feedback by category</span></div>
+          <div id="dashTypes" class="bar-rows"><div class="empty" style="padding:28px 8px;">No data yet</div></div>
+        </div>
+      </div>
+
+      <div class="panel" style="padding-top:16px;">
+        <div class="dash-card-head" style="margin-bottom:10px;">
+          <h2 style="margin:0;font-size:1.05rem;">Recent responses</h2>
+          <span class="head-note" id="recentCount"></span>
+        </div>
+        <div id="dashRecent"><div class="empty">No responses yet</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal edit-modal" id="editModal" role="dialog" aria-modal="true">
+    <div class="modal-inner">
+      <div class="modal-bar">
+        <div>
+          <strong>Edit facility</strong>
+          <div class="muted" style="font-size:0.78rem;margin-top:4px;">ID stays the same — QR / NFC links do not change.</div>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="closeEditModal">Close</button>
+      </div>
+      <form id="editForm">
+        <label>Facility ID</label>
+        <div class="id-readonly" id="editId"></div>
+
+        <label for="editTypeCode">Facility type</label>
+        <select id="editTypeCode" required></select>
+
+        <label for="editName">Facility name</label>
+        <input id="editName" required>
+
+        <label for="editProperty">Property</label>
+        <input id="editProperty" required>
+
+        <label for="editLocation">Location</label>
+        <input id="editLocation" required>
+
+        <div class="row2">
+          <div>
+            <label for="editBuilding">Building</label>
+            <input id="editBuilding">
+          </div>
+          <div>
+            <label for="editFloor">Floor</label>
+            <input id="editFloor">
+          </div>
+        </div>
+
+        <label for="editZone">Zone / Area</label>
+        <input id="editZone">
+
+        <label for="editNotes">Internal notes</label>
+        <textarea id="editNotes"></textarea>
+
+        <label style="display:flex;align-items:center;gap:8px;margin-top:14px;cursor:pointer;">
+          <input type="checkbox" id="editActive" checked style="width:auto;margin:0;">
+          Active
+        </label>
+
+        <div class="actions" style="margin-top:18px;justify-content:flex-end;">
+          <button type="button" class="btn btn-ghost btn-sm" id="cancelEditBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="saveEditBtn">Save changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal" id="printModal" role="dialog" aria-modal="true">
+    <div class="modal-inner">
+      <div class="modal-bar no-print">
+        <div>
+          <strong id="modalTitle">Sign PDF</strong>
+          <div class="muted" id="modalUrls" style="font-size:0.78rem; margin-top:4px;"></div>
+        </div>
+        <div class="size-tabs">
+          <button type="button" class="btn btn-ghost btn-sm is-on" data-size="a4">A4</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-size="a5">A5</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-size="a6">A6</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-size="sticker">Sticker</button>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost btn-sm" id="copyQrUrl">Copy QR URL</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="copyNfcUrl">Copy NFC URL</button>
+          <button type="button" class="btn btn-primary btn-sm" id="pdfBtn" style="width:auto;">Download PDF</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="printBtn" style="width:auto;">Print…</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="closeModal">Close</button>
+        </div>
+      </div>
+
+      <div class="sign-stage">
+        <main class="page size-a4" id="sign">
+          <div class="lotus-row">
+            <div class="lotus-line"></div>
+            <svg class="lotus" viewBox="0 0 60 45" aria-hidden="true">
+              <path d="M30 40 C20 32 18 22 30 7 C42 22 40 32 30 40"/>
+              <path d="M28 40 C17 39 9 32 7 22 C18 22 26 29 28 40"/>
+              <path d="M32 40 C43 39 51 32 53 22 C42 22 34 29 32 40"/>
+              <path d="M27 41 C15 44 6 40 3 31 C14 29 23 33 27 41"/>
+              <path d="M33 41 C45 44 54 40 57 31 C46 29 37 33 33 41"/>
+            </svg>
+            <div class="lotus-line"></div>
+          </div>
+
+          <div class="small-title">HOW WAS THE</div>
+          <div class="main-title" id="signName">PRAYER ROOM?</div>
+
+          <div class="divider">
+            <div class="divider-line"></div>
+            <div class="divider-dot"></div>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="ratings">
+            <div class="rating">
+              <div class="rating-circle">
+                <svg class="feedback-icon" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><path fill="#173B30" fill-rule="evenodd" d="M51 192L55 191H125L126 192V471L125 472H61L60 473L53 472L40 465L33 456L30 446V218L32 210L36 203L42 197ZM323 31H331L341 35L350 43L354 50L356 57V112L355 113V122L354 123L353 135L345 162L333 186L312 215V221L314 225L320 229H463L470 232L477 239L481 249V256L477 266L470 273L463 276H395L391 278L388 282V290L394 296H446L453 298L463 307L466 313V319L467 320L466 321V327L463 333L455 341L446 344H375L370 349L369 356L370 359L374 363L377 364H430L437 367L445 375L448 383L447 396L442 404L433 410L430 411H359L353 414L351 418L352 427L355 430L360 432H385L386 431L413 432L419 435L426 442L430 453L428 465L424 472L419 477L410 481H284L283 480H271L270 479H263L262 478H256L235 474L192 463L188 461L177 459L173 457L158 454L154 452L147 451L145 449V217L166 206H168L189 195H191L209 185L230 170L251 149L258 140L273 116L303 47L313 35ZM355 18L348 14L335 10H319L311 12L300 18L290 28L283 39L276 54L263 89L252 111L236 134L211 158L196 168L149 192L147 194L143 181L137 175L131 172H52L35 178L29 182L18 194L13 204L10 215V451L13 462L17 470L22 477L31 485L45 492L54 494H129L135 492L142 486L144 483L146 474L149 473L225 493L261 500H268L269 501H279L280 502H415L429 497L435 493L444 483L450 469L451 452L448 441L442 432L451 427L459 420L464 413L469 399V382L467 375L461 364L474 356L480 349L485 340L488 328V318L484 304L478 295L484 291L496 278L502 262V248L499 237L493 226L483 216L471 210L459 209L458 208H345L344 207L354 191L367 162V159L372 144L374 128L375 127V120L376 119L377 89L376 88V52L375 47L367 30Z"/></svg>
+              </div>
+              <div class="rating-label">GOOD</div>
+            </div>
+            <div class="vertical-line"></div>
+            <div class="rating">
+              <div class="rating-circle">
+                <svg class="feedback-icon down" viewBox="0 0 512 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><g transform="rotate(180 256 256)"><path fill="#173B30" fill-rule="evenodd" d="M51 192L55 191H125L126 192V471L125 472H61L60 473L53 472L40 465L33 456L30 446V218L32 210L36 203L42 197ZM323 31H331L341 35L350 43L354 50L356 57V112L355 113V122L354 123L353 135L345 162L333 186L312 215V221L314 225L320 229H463L470 232L477 239L481 249V256L477 266L470 273L463 276H395L391 278L388 282V290L394 296H446L453 298L463 307L466 313V319L467 320L466 321V327L463 333L455 341L446 344H375L370 349L369 356L370 359L374 363L377 364H430L437 367L445 375L448 383L447 396L442 404L433 410L430 411H359L353 414L351 418L352 427L355 430L360 432H385L386 431L413 432L419 435L426 442L430 453L428 465L424 472L419 477L410 481H284L283 480H271L270 479H263L262 478H256L235 474L192 463L188 461L177 459L173 457L158 454L154 452L147 451L145 449V217L166 206H168L189 195H191L209 185L230 170L251 149L258 140L273 116L303 47L313 35ZM355 18L348 14L335 10H319L311 12L300 18L290 28L283 39L276 54L263 89L252 111L236 134L211 158L196 168L149 192L147 194L143 181L137 175L131 172H52L35 178L29 182L18 194L13 204L10 215V451L13 462L17 470L22 477L31 485L45 492L54 494H129L135 492L142 486L144 483L146 474L149 473L225 493L261 500H268L269 501H279L280 502H415L429 497L435 493L444 483L450 469L451 452L448 441L442 432L451 427L459 420L464 413L469 399V382L467 375L461 364L474 356L480 349L485 340L488 328V318L484 304L478 295L484 291L496 278L502 262V248L499 237L493 226L483 216L471 210L459 209L458 208H345L344 207L354 191L367 162V159L372 144L374 128L375 127V120L376 119L377 89L376 88V52L375 47L367 30Z"/></g></svg>
+              </div>
+              <div class="rating-label">NOT GOOD</div>
+            </div>
+          </div>
+
+          <div class="divider lower-divider">
+            <div class="divider-line"></div>
+            <div class="divider-dot"></div>
+            <div class="divider-line"></div>
+          </div>
+
+          <div class="qr-frame">
+            <div id="signQr"></div>
+          </div>
+
+          <div class="nfc-area">
+            <div class="nfc-row">
+              <div class="nfc-line"></div>
+              <svg class="nfc-icon" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 17 C12 20 12 23 8 26"/>
+                <path d="M14 11 C22 17 22 25 14 31"/>
+                <path d="M21 6 C33 15 33 27 21 36"/>
+              </svg>
+              <div class="nfc-line"></div>
+            </div>
+            <div class="nfc-title">NFC</div>
+            <div class="tap-text">TAP YOUR PHONE</div>
+          </div>
+          <div class="sign-id" id="signId"></div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const typeSelect = document.getElementById('typeCode');
+  const form = document.getElementById('createForm');
+  const listEl = document.getElementById('list');
+  const searchEl = document.getElementById('search');
+  const baseUrlEl = document.getElementById('baseUrl');
+  const toast = document.getElementById('toast');
+  const modal = document.getElementById('printModal');
+  const sign = document.getElementById('sign');
+  let currentFacility = null;
+  let currentUrls = null;
+  let qrInstance = null;
+  let signSize = 'a4';
+
+    const editTypeSelect = document.getElementById('editTypeCode');
+  Object.values(FacilityKit.FACILITY_TYPES).forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.code;
+    opt.textContent = t.name + ' (' + t.code + ')';
+    typeSelect.appendChild(opt);
+    const opt2 = document.createElement('option');
+    opt2.value = t.code;
+    opt2.textContent = t.name + ' (' + t.code + ')';
+    editTypeSelect.appendChild(opt2);
+  });
+
+  function toastMsg(msg) {
+    toast.textContent = msg;
+    toast.classList.add('is-on');
+    setTimeout(() => toast.classList.remove('is-on'), 1800);
+  }
+
+  function syncNamePlaceholder() {
+    const t = FacilityKit.FACILITY_TYPES[typeSelect.value];
+    if (t && !form.name.value) form.name.placeholder = t.name;
+  }
+  typeSelect.addEventListener('change', () => {
+    const t = FacilityKit.FACILITY_TYPES[typeSelect.value];
+    if (t) form.name.value = t.name;
+    syncNamePlaceholder();
+  });
+  syncNamePlaceholder();
+  const first = FacilityKit.FACILITY_TYPES[typeSelect.value];
+  if (first) form.name.value = first.name;
+
+  const settings = FacilityKit.loadSettings();
+  baseUrlEl.value = settings.baseUrl || '';
+
+  document.getElementById('saveSettings').addEventListener('click', () => {
+    FacilityKit.saveSettings({
+      baseUrl: baseUrlEl.value.trim(),
+      feedbackPath: 'ff.html'
+    });
+    toastMsg('Base URL saved');
+    renderList();
+  });
+
+  let facilitiesCache = [];
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+    try {
+      const facility = await FacilitySupabase.createFacility({
+        typeCode: typeSelect.value,
+        name: form.name.value,
+        property: form.property.value,
+        location: form.location.value,
+        building: form.building.value,
+        floor: form.floor.value,
+        zone: form.zone.value,
+        notes: form.notes.value
+      });
+      form.location.value = '';
+      form.building.value = '';
+      form.floor.value = '';
+      form.zone.value = '';
+      form.notes.value = '';
+      await renderList();
+      toastMsg('Created ' + facility.id);
+      fillDashFacilityFilter();
+      if (viewDashboard && !viewDashboard.hidden) renderDashboard();
+      openPrint(facility);
+    } catch (err) {
+      console.error(err);
+      const msg = err.message || String(err);
+      if (/unauthorized|sign in|session/i.test(msg)) showLogin(msg);
+      alert('Could not create facility: ' + msg);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Create facility';
+    }
+  });
+
+  async function renderList() {
+    const q = (searchEl.value || '').trim().toLowerCase();
+    listEl.innerHTML = '<div class="empty">Loading…</div>';
+    try {
+      facilitiesCache = await FacilitySupabase.listFacilities();
+    } catch (err) {
+      console.error(err);
+      listEl.innerHTML = '<div class="empty">Could not load facilities from Supabase.<br><small>' + esc(err.message || err) + '</small><br>Run supabase-facility-feedback.sql and supabase-facility-admin-auth.sql first.</div>';
+      return;
+    }
+
+    const items = facilitiesCache.filter(f => {
+      if (!q) return true;
+      return [f.id, f.name, f.property, f.location, f.typeName, f.zone, f.building]
+        .join(' ')
+        .toLowerCase()
+        .includes(q);
+    });
+
+    if (!items.length) {
+      listEl.innerHTML = '<div class="empty">No facilities yet. Create one on the left.</div>';
+      return;
+    }
+
+    const rows = items.map(f => {
+      const meta = [f.property, f.location, f.building, f.floor, f.zone].filter(Boolean).join(' · ');
+      return '<tr>' +
+        '<td><div class="id">' + esc(f.id) + '</div><div class="muted">' + esc(f.typeName) + '</div></td>' +
+        '<td><div><strong>' + esc(f.name) + '</strong></div>' +
+        (meta ? '<div class="muted">' + esc(meta) + '</div>' : '') +
+        '</td>' +
+        '<td class="actions">' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-edit="' + esc(f.id) + '">Edit</button>' +
+          '<button type="button" class="btn btn-primary btn-sm" style="width:auto;" data-regen="' + esc(f.id) + '">Regenerate / Print</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-pdf="' + esc(f.id) + '">Download PDF</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-copy-qr="' + esc(f.id) + '">Copy QR</button>' +
+          '<button type="button" class="btn btn-ghost btn-sm" data-copy-nfc="' + esc(f.id) + '">Copy NFC</button>' +
+          '<button type="button" class="btn btn-danger btn-sm" data-del="' + esc(f.id) + '">Delete</button>' +
+        '</td></tr>';
+    }).join('');
+
+    listEl.innerHTML = '<table><thead><tr><th>ID</th><th>Details</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  listEl.addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    if (btn.dataset.edit) {
+      const f = facilitiesCache.find(x => x.id === btn.dataset.edit);
+      if (f) openEdit(f);
+    }
+    if (btn.dataset.regen) {
+      const f = facilitiesCache.find(x => x.id === btn.dataset.regen);
+      if (f) openPrint(f);
+    }
+    if (btn.dataset.pdf) {
+      const f = facilitiesCache.find(x => x.id === btn.dataset.pdf);
+      if (f) {
+        openPrint._autoPdf = true;
+        openPrint(f);
+      }
+    }
+    if (btn.dataset.copyQr) {
+      const u = FacilityKit.urlsFor(btn.dataset.copyQr);
+      copyText(u.qr);
+    }
+    if (btn.dataset.copyNfc) {
+      const u = FacilityKit.urlsFor(btn.dataset.copyNfc);
+      copyText(u.nfc);
+    }
+    if (btn.dataset.del) {
+      if (confirm('Delete ' + btn.dataset.del + '?')) {
+        try {
+          await FacilitySupabase.deleteFacility(btn.dataset.del);
+          await renderList();
+          toastMsg('Deleted');
+        } catch (err) {
+          alert('Delete failed: ' + (err.message || err));
+        }
+      }
+    }
+  });
+
+  searchEl.addEventListener('input', () => renderList());
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => toastMsg('Copied')).catch(() => {
+      prompt('Copy URL:', text);
+    });
+  }
+
+
+  /* ── Tabs ── */
+  const viewFacilities = document.getElementById('viewFacilities');
+  const viewDashboard = document.getElementById('viewDashboard');
+  const headerSub = document.getElementById('headerSub');
+  let dashLoadedOnce = false;
+  let dashResponses = [];
+  let dashRatingFilter = '';
+
+  document.querySelectorAll('.app-nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.dataset.view;
+      document.querySelectorAll('.app-nav button').forEach(b => b.classList.toggle('is-on', b === btn));
+      viewFacilities.hidden = view !== 'facilities';
+      viewDashboard.hidden = view !== 'dashboard';
+      headerSub.textContent = view === 'dashboard'
+        ? 'Live feedback insights across facilities.'
+        : 'Create facilities and printable feedback signs.';
+      if (view === 'dashboard') loadDashboard(false);
+    });
+  });
+
+  /* ── Edit facility ── */
+  const editModal = document.getElementById('editModal');
+  const editForm = document.getElementById('editForm');
+  let editingFacility = null;
+
+  function openEdit(f) {
+    editingFacility = f;
+    document.getElementById('editId').textContent = f.id;
+    editTypeSelect.value = f.typeCode;
+    document.getElementById('editName').value = f.name || '';
+    document.getElementById('editProperty').value = f.property || '';
+    document.getElementById('editLocation').value = f.location || '';
+    document.getElementById('editBuilding').value = f.building || '';
+    document.getElementById('editFloor').value = f.floor || '';
+    document.getElementById('editZone').value = f.zone || '';
+    document.getElementById('editNotes').value = f.notes || '';
+    document.getElementById('editActive').checked = f.active !== false;
+    editModal.classList.add('is-on');
+  }
+
+  function closeEdit() {
+    editModal.classList.remove('is-on');
+    editingFacility = null;
+  }
+
+  document.getElementById('closeEditModal').addEventListener('click', closeEdit);
+  document.getElementById('cancelEditBtn').addEventListener('click', closeEdit);
+  editModal.addEventListener('click', (e) => { if (e.target === editModal) closeEdit(); });
+
+  editForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!editingFacility) return;
+    const btn = document.getElementById('saveEditBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    try {
+      const type = FacilityKit.FACILITY_TYPES[editTypeSelect.value];
+      const updated = await FacilitySupabase.updateFacility({
+        id: editingFacility.id,
+        typeCode: editTypeSelect.value,
+        typeName: type ? type.name : editingFacility.typeName,
+        name: document.getElementById('editName').value.trim(),
+        property: document.getElementById('editProperty').value.trim(),
+        location: document.getElementById('editLocation').value.trim(),
+        building: document.getElementById('editBuilding').value.trim(),
+        floor: document.getElementById('editFloor').value.trim(),
+        zone: document.getElementById('editZone').value.trim(),
+        notes: document.getElementById('editNotes').value.trim(),
+        active: document.getElementById('editActive').checked
+      });
+      const idx = facilitiesCache.findIndex(x => normalizeFacilityId(x.id) === normalizeFacilityId(updated.id));
+      if (idx >= 0) facilitiesCache[idx] = updated;
+      else facilitiesCache.unshift(updated);
+      closeEdit();
+      await renderList();
+      const idx2 = facilitiesCache.findIndex(x => normalizeFacilityId(x.id) === normalizeFacilityId(updated.id));
+      if (idx2 >= 0) facilitiesCache[idx2] = Object.assign({}, facilitiesCache[idx2], updated);
+      syncDashboardResponsesWithFacilities();
+      toastMsg('Updated ' + updated.id);
+      fillDashFacilityFilter();
+      if (!viewDashboard.hidden) renderDashboard();
+    } catch (err) {
+      console.error(err);
+      const msg = err.message || String(err);
+      if (/unauthorized|sign in|session/i.test(msg)) showLogin(msg);
+      alert('Could not save: ' + msg);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save changes';
+    }
+  });
+
+  /* ── Dashboard ── */
+  const RATING_LABELS = ['', 'Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
+
+  function normalizeFacilityId(id) {
+    if (id == null || id === '') return '';
+    let s = String(id);
+    try { s = decodeURIComponent(s); } catch (_) {}
+    return s.toUpperCase().trim();
+  }
+
+  function facilityById(id) {
+    const key = normalizeFacilityId(id);
+    if (!key) return null;
+    return facilitiesCache.find(f => normalizeFacilityId(f.id) === key) || null;
+  }
+
+  function livePropertyKey(r) {
+    const f = facilityById(r.facilityId);
+    if (f) {
+      const p = String(f.property || '').trim();
+      return p || 'Unspecified';
+    }
+    const p = String(r.property || '').trim();
+    return p || 'Unspecified';
+  }
+
+  function enrichResponse(r) {
+    const f = facilityById(r.facilityId);
+    if (!f) return Object.assign({}, r);
+    return Object.assign({}, r, {
+      facilityId: f.id || r.facilityId,
+      facilityName: f.name != null ? f.name : (r.facilityName || ''),
+      facilityType: f.typeCode != null ? f.typeCode : (r.facilityType || ''),
+      facilityTypeName: f.typeName != null ? f.typeName : (r.facilityTypeName || ''),
+      property: String(f.property || ''),
+      location: String(f.location || ''),
+      building: String(f.building || ''),
+      floor: String(f.floor || ''),
+      zone: String(f.zone || '')
+    });
+  }
+
+  function syncDashboardResponsesWithFacilities() {
+    dashResponses = (dashResponses || []).map(enrichResponse);
+  }
+
+  function fillDashFacilityFilter() {
+    const sel = document.getElementById('dashFacility');
+    if (!sel) return;
+    const cur = sel.value;
+    const props = new Set();
+    sel.innerHTML = '<option value="">All facilities</option>';
+    facilitiesCache.forEach(f => {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.id + ' · ' + (f.name || f.typeName || '');
+      sel.appendChild(opt);
+      if (f.property) props.add(f.property);
+    });
+    (dashResponses || []).forEach(r => {
+      const live = facilityById(r.facilityId);
+      const prop = live ? (live.property || '') : (r.property || '');
+      if (prop) props.add(prop);
+    });
+    sel.value = cur;
+    const propSel = document.getElementById('dashProperty');
+    if (!propSel) return;
+    const curP = propSel.value;
+    propSel.innerHTML = '<option value="">All properties</option>';
+    Array.from(props).sort().forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p;
+      opt.textContent = p;
+      propSel.appendChild(opt);
+    });
+    if (curP && props.has(curP)) propSel.value = curP;
+  }
+
+  function baseDashRows() {
+    const facilityId = document.getElementById('dashFacility').value;
+    const property = document.getElementById('dashProperty').value;
+    return (dashResponses || []).map(enrichResponse).filter(r => {
+      if (facilityId && normalizeFacilityId(r.facilityId) !== normalizeFacilityId(facilityId)) return false;
+      if (property && livePropertyKey(r) !== property) return false;
+      return true;
+    });
+  }
+
+  function filteredDashRows() {
+    const rating = dashRatingFilter ? Number(dashRatingFilter) : 0;
+    return baseDashRows().filter(r => {
+      if (rating && Number(r.rating) !== rating) return false;
+      return true;
+    });
+  }
+
+  function stars(n) {
+    const v = Math.max(0, Math.min(5, Math.round(Number(n) || 0)));
+    return '★'.repeat(v) + '☆'.repeat(5 - v);
+  }
+
+  function renderBarRows(el, rows, opts) {
+    opts = opts || {};
+    if (!el) return;
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty" style="padding:28px 8px;">No data yet</div>';
+      return;
+    }
+    const max = Math.max.apply(null, rows.map(r => Math.max(r.count, 0.0001))) || 1;
+    const wide = opts.wide ? ' wide-label' : '';
+    const selectedProp = opts.selectedProperty || '';
+    el.innerHTML = rows.map(r => {
+      let label;
+      if (r.subHtml) {
+        label = '<strong>' + esc(r.label) + '</strong><small>' + r.subHtml + '</small>';
+      } else if (r.sub) {
+        label = '<strong>' + esc(r.label) + '</strong><small>' + esc(r.sub) + '</small>';
+      } else {
+        label = esc(r.label);
+      }
+      const fillClass = r.tone ? (' ' + r.tone) : '';
+      const right = r.right != null ? r.right : r.count;
+      const propKey = r.property != null ? String(r.property) : '';
+      const clickable = propKey ? ' is-clickable' : '';
+      const isSel = propKey && selectedProp && propKey === selectedProp ? ' is-selected' : '';
+      const dataAttr = propKey
+        ? (' data-property="' + esc(propKey) + '" role="button" tabindex="0"')
+        : '';
+      const widthPct = Math.round(Math.min(100, (r.count / max) * 100));
+      return '<div class="bar-row' + wide + clickable + isSel + '"' + dataAttr + '>' +
+        '<div class="name">' + label + '</div>' +
+        '<div class="track"><div class="fill' + fillClass + '" style="width:' + widthPct + '%"></div></div>' +
+        '<div class="n"><span class="n-badge">' + esc(String(right)) + '</span></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function renderTrend(el, rows) {
+    if (!el) return;
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty" style="padding:28px 8px;">No data yet</div>';
+      return;
+    }
+    const byDay = {};
+    const ratingDay = {};
+    rows.forEach(r => {
+      const d = new Date(r.createdAt || r.submittedAt);
+      if (isNaN(d)) return;
+      const key = d.toISOString().slice(0, 10);
+      byDay[key] = (byDay[key] || 0) + 1;
+      if (!ratingDay[key]) ratingDay[key] = { sum: 0, n: 0 };
+      ratingDay[key].sum += Number(r.rating) || 0;
+      ratingDay[key].n += 1;
+    });
+    const keys = Object.keys(byDay).sort();
+    const last = keys.slice(-21);
+    if (!last.length) {
+      el.innerHTML = '<div class="empty" style="padding:28px 8px;">No data yet</div>';
+      return;
+    }
+    const note = document.getElementById('trendNote');
+    if (note) note.textContent = last.length + ' active days';
+    const vals = last.map(k => byDay[k]);
+    const avgs = last.map(k => ratingDay[k].n ? ratingDay[k].sum / ratingDay[k].n : 0);
+    const max = Math.max.apply(null, vals) || 1;
+    const W = 640, H = 188, padX = 12, padY = 22;
+    const pts = vals.map((v, i) => {
+      const x = padX + (last.length === 1 ? (W - padX * 2) / 2 : i * (W - padX * 2) / (last.length - 1));
+      const y = H - padY - (v / max) * (H - padY * 2);
+      return [x, y];
+    });
+    const avgPts = avgs.map((v, i) => {
+      const x = pts[i][0];
+      const y = H - padY - (v / 5) * (H - padY * 2);
+      return [x, y];
+    });
+    function pathOf(points) {
+      return points.map((pt, i) => (i ? 'L' : 'M') + pt[0].toFixed(1) + ' ' + pt[1].toFixed(1)).join(' ');
+    }
+    const line = pathOf(pts);
+    const area = line + ' L' + pts[pts.length-1][0].toFixed(1) + ' ' + (H - padY) +
+      ' L' + pts[0][0].toFixed(1) + ' ' + (H - padY) + ' Z';
+    const avgLine = pathOf(avgPts);
+    const dots = pts.map(pt => '<circle cx="' + pt[0].toFixed(1) + '" cy="' + pt[1].toFixed(1) + '" r="3" fill="#0071e3"/>').join('');
+    let grids = '';
+    for (let g = 0; g < 4; g++) {
+      const y = padY + g * (H - padY * 2) / 3;
+      grids += '<line x1="' + padX + '" y1="' + y + '" x2="' + (W - padX) + '" y2="' + y + '" stroke="rgba(0,0,0,0.05)" stroke-width="1"/>';
+    }
+    el.innerHTML =
+      '<svg class="trend-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+        '<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#0071e3" stop-opacity="0.26"/>' +
+          '<stop offset="100%" stop-color="#0071e3" stop-opacity="0"/>' +
+        '</linearGradient></defs>' +
+        grids +
+        '<path d="' + area + '" fill="url(#tg)"/>' +
+        '<path d="' + line + '" fill="none" stroke="#0071e3" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<path d="' + avgLine + '" fill="none" stroke="#34c759" stroke-width="2" stroke-dasharray="5 5" stroke-linecap="round"/>' +
+        dots +
+      '</svg>' +
+      '<div class="muted" style="display:flex;justify-content:space-between;align-items:center;font-size:0.72rem;margin-top:6px;gap:10px;flex-wrap:wrap;">' +
+        '<span>' + esc(last[0]) + ' → ' + esc(last[last.length-1]) + '</span>' +
+        '<span><span style="color:#0071e3;">●</span> Volume &nbsp; <span style="color:#34c759;">●</span> Avg rating</span>' +
+      '</div>';
+  }
+
+  function renderDonut(el, parts, opts) {
+    opts = opts || {};
+    if (!el) return;
+    const total = parts.reduce((s, p) => s + p.count, 0);
+    if (!total) {
+      el.innerHTML = '<div class="empty" style="padding:28px 8px;">No data yet</div>';
+      return;
+    }
+    const selected = opts.selectedRating ? Number(opts.selectedRating) : 0;
+    const colors = ['#34c759', '#30d158', '#ffcc00', '#ff9500', '#ff3b30'];
+    const R = 54, C = 2 * Math.PI * R;
+    let offset = 0;
+    const arcs = parts.map((part, i) => {
+      const len = (part.count / total) * C;
+      const rating = part.rating != null ? Number(part.rating) : (5 - i);
+      const sel = selected && rating === selected;
+      const circle = '<circle class="donut-arc' + (sel ? ' is-selected' : '') +
+        '" data-rating="' + rating + '" role="button" tabindex="0" cx="70" cy="70" r="' + R +
+        '" fill="none" stroke="' + colors[i] +
+        '" stroke-width="' + (sel ? '18' : '14') +
+        '" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) +
+        '" stroke-dashoffset="' + (-offset).toFixed(2) +
+        '" style="cursor:pointer"><title>' + esc(part.label) + '</title></circle>';
+      offset += len;
+      return circle;
+    }).join('');
+    const legend = parts.map((part, i) => {
+      const rating = part.rating != null ? Number(part.rating) : (5 - i);
+      const sel = selected && rating === selected ? ' is-selected' : '';
+      return '<div class="leg is-clickable' + sel + '" data-rating="' + rating +
+        '" role="button" tabindex="0">' +
+        '<span class="swatch" style="background:' + colors[i] + '"></span>' +
+        '<span>' + esc(part.label) + '</span>' +
+        '<span class="leg-n">' + part.count + ' · ' + Math.round(part.count / total * 100) + '%</span></div>';
+    }).join('');
+    const centerLabel = selected ? (selected + '★') : String(total);
+    const centerSub = selected ? 'filtered' : 'responses';
+    el.innerHTML =
+      '<div class="donut-wrap">' +
+        '<svg viewBox="0 0 140 140">' +
+          '<circle cx="70" cy="70" r="' + R + '" fill="none" stroke="rgba(0,0,0,0.05)" stroke-width="14"/>' +
+          '<g transform="rotate(-90 70 70)">' + arcs + '</g>' +
+          '<text x="70" y="66" text-anchor="middle" font-size="22" font-weight="700" fill="#1d1d1f" font-family="-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif">' + esc(centerLabel) + '</text>' +
+          '<text x="70" y="84" text-anchor="middle" font-size="10" fill="#6e6e73">' + esc(centerSub) + '</text>' +
+        '</svg>' +
+        '<div class="donut-legend">' + legend + '</div>' +
+      '</div>';
+  }
+
+  function renderHeat(el, rows) {
+    if (!el) return;
+    if (!rows.length) {
+      el.innerHTML = '<div class="empty" style="padding:28px 8px;">No data yet</div>';
+      return;
+    }
+    const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const grid = Array.from({ length: 7 }, () => Array(24).fill(0));
+    rows.forEach(r => {
+      const d = new Date(r.createdAt || r.submittedAt);
+      if (isNaN(d)) return;
+      grid[d.getDay()][d.getHours()] += 1;
+    });
+    const buckets = ['0–3','4–7','8–11','12–15','16–19','20–23'];
+    const collapsed = grid.map(day => {
+      const b = [];
+      for (let i = 0; i < 6; i++) {
+        let s = 0;
+        for (let h = i * 4; h < i * 4 + 4; h++) s += day[h];
+        b.push(s);
+      }
+      return b;
+    });
+    let max = 1;
+    collapsed.forEach(d => d.forEach(v => { if (v > max) max = v; }));
+    let html = '<div class="heatmap">';
+    html += '<div></div>' + buckets.map(b => '<div class="h-day">' + b + '</div>').join('');
+    const order = [1,2,3,4,5,6,0];
+    order.forEach(di => {
+      html += '<div class="h-label">' + days[di] + '</div>';
+      collapsed[di].forEach(v => {
+        const intensity = v / max;
+        const alpha = v ? (0.12 + intensity * 0.78) : 0.05;
+        html += '<div class="h-cell" title="' + v + '" style="background:rgba(0,113,227,' + alpha.toFixed(2) + ')"></div>';
+      });
+    });
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  function satisfactionTone(avg, total) {
+    if (!total) return { title: 'Guest satisfaction', blurb: 'Waiting for responses in this period.' };
+    if (avg >= 4.5) return { title: 'Excellent sentiment', blurb: 'Guests are highly satisfied across the selected filters.' };
+    if (avg >= 4.0) return { title: 'Strong satisfaction', blurb: 'Overall scores look healthy — keep watching quieter facilities.' };
+    if (avg >= 3.2) return { title: 'Mixed satisfaction', blurb: 'Some experiences are solid, but a few facilities need attention.' };
+    return { title: 'Needs attention', blurb: 'Scores are soft in this period — review issues and comments below.' };
+  }
+
+  function renderDashboard() {
+    const rows = filteredDashRows();
+    const total = rows.length;
+    const avg = total ? (rows.reduce((s, r) => s + (Number(r.rating) || 0), 0) / total) : 0;
+    const pos = rows.filter(r => Number(r.rating) >= 4).length;
+    const neg = rows.filter(r => Number(r.rating) > 0 && Number(r.rating) <= 3).length;
+    const withComments = rows.filter(r => (r.comment || '').trim()).length;
+    const heard = new Set(rows.map(r => r.facilityId).filter(Boolean)).size;
+
+    let daySpan = 1;
+    if (total) {
+      const times = rows.map(r => new Date(r.createdAt || r.submittedAt).getTime()).filter(n => !isNaN(n));
+      if (times.length) daySpan = Math.max(1, Math.ceil((Math.max.apply(null, times) - Math.min.apply(null, times)) / 86400000) + 1);
+    }
+    const perDay = total ? (total / daySpan) : 0;
+
+    const circ = 2 * Math.PI * 52;
+    const ring = document.getElementById('scoreRing');
+    if (ring) {
+      const pct = total ? Math.max(0, Math.min(1, avg / 5)) : 0;
+      ring.style.strokeDasharray = String(circ);
+      ring.style.strokeDashoffset = String(circ * (1 - pct));
+      ring.setAttribute('stroke', avg >= 4 ? '#34c759' : avg >= 3.2 ? '#ff9500' : total ? '#ff3b30' : '#0071e3');
+    }
+    const scoreBig = document.getElementById('scoreBig');
+    if (scoreBig) scoreBig.textContent = total ? avg.toFixed(1) : '—';
+    const tone = satisfactionTone(avg, total);
+    const st = document.getElementById('scoreTitle');
+    const sb = document.getElementById('scoreBlurb');
+    if (st) st.textContent = tone.title;
+    if (sb) sb.textContent = tone.blurb;
+
+    const src = { qr: 0, nfc: 0 };
+    rows.forEach(r => {
+      const s = String(r.source || '').toLowerCase();
+      if (s === 'nfc') src.nfc += 1;
+      else src.qr += 1; // treat unknown/web as QR channel visually excluded from NFC only
+    });
+    // Count QR strictly; ignore pure web for tiles
+    src.qr = rows.filter(r => String(r.source || '').toLowerCase() === 'qr').length;
+    src.nfc = rows.filter(r => String(r.source || '').toLowerCase() === 'nfc').length;
+    const srcTotal = src.qr + src.nfc;
+    function setSrc(key, n) {
+      const el = document.getElementById('src' + key);
+      const pctEl = document.getElementById('src' + key + 'Pct');
+      const barEl = document.getElementById('src' + key + 'Bar');
+      const pctV = srcTotal ? Math.round(n / srcTotal * 100) : 0;
+      if (el) el.textContent = String(n);
+      if (pctEl) pctEl.textContent = pctV + '%';
+      if (barEl) barEl.style.width = pctV + '%';
+    }
+    setSrc('Qr', src.qr);
+    setSrc('Nfc', src.nfc);
+
+    // Personalize hero when a property is selected
+    const propHero = document.getElementById('dashProperty').value;
+    if (propHero && sb) {
+      const facInProp = (facilitiesCache || []).filter(f => {
+        if (!f || f.active === false) return false;
+        return (String(f.property || '').trim() || 'Unspecified') === propHero;
+      }).length;
+      if (total) {
+        sb.textContent = 'Showing responses across ' + facInProp + ' facilit' +
+          (facInProp === 1 ? 'y' : 'ies') + ' at ' + propHero + '.';
+      } else {
+        sb.textContent = 'No responses from facilities at ' + propHero + ' in this period yet.';
+      }
+      if (st) st.textContent = propHero;
+    }
+
+    if (dashRatingFilter && sb) {
+      const starsN = Number(dashRatingFilter);
+      const label = starsN + '★ ' + (RATING_LABELS[starsN] || '');
+      if (!document.getElementById('dashProperty').value && st) st.textContent = label;
+      sb.textContent = total
+        ? ('Showing only ' + label + ' responses in this period.')
+        : ('No ' + label + ' responses in this period.');
+    }
+
+    const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    setText('kpiTotal', String(total));
+    setText('kpiTotalSub', total ? ('across ' + daySpan + ' day' + (daySpan === 1 ? '' : 's')) : 'No responses yet');
+    setText('kpiPos', total ? Math.round(pos / total * 100) + '%' : '—');
+    setText('kpiPosSub', total ? pos + ' of ' + total : '');
+    setText('kpiNeg', total ? Math.round(neg / total * 100) + '%' : '—');
+    setText('kpiNegSub', total ? neg + ' of ' + total : '');
+    setText('kpiRate', total ? perDay.toFixed(1) : '—');
+    setText('kpiRateSub', total ? 'responses / day' : '');
+    setText('kpiComments', total ? Math.round(withComments / total * 100) + '%' : '—');
+    setText('kpiCommentsSub', total ? withComments + ' written notes' : '');
+    const propFilter = document.getElementById('dashProperty').value || '';
+    const facUniverse = (facilitiesCache || []).filter(f => {
+      if (!f || f.active === false) return false;
+      if (!propFilter) return true;
+      return (String(f.property || '').trim() || 'Unspecified') === propFilter;
+    });
+    setText('kpiHeard', String(heard || '—'));
+    setText('kpiHeardSub', facUniverse.length ? ('of ' + facUniverse.length + ' facilities') : '');
+
+    const ratingBase = baseDashRows();
+    const ratingParts = [5,4,3,2,1].map(n => ({
+      rating: n,
+      label: n + '★ ' + (RATING_LABELS[n] || ''),
+      count: ratingBase.filter(r => Number(r.rating) === n).length
+    })).filter(part => part.count);
+    renderDonut(document.getElementById('dashRatings'), ratingParts, {
+      selectedRating: dashRatingFilter
+    });
+
+    const selectedProperty = document.getElementById('dashProperty').value || '';
+    const byFac = {};
+    (facilitiesCache || []).forEach(f => {
+      if (!f || f.active === false) return;
+      const prop = String(f.property || '').trim() || 'Unspecified';
+      if (selectedProperty && prop !== selectedProperty) return;
+      const key = f.id;
+      byFac[key] = { id: key, name: f.name || f.typeName || key, property: prop, sum: 0, n: 0 };
+    });
+    rows.forEach(r => {
+      const key = r.facilityId || 'Unknown';
+      const prop = livePropertyKey(r);
+      if (!byFac[key]) byFac[key] = { id: key, name: r.facilityName || key, property: prop, sum: 0, n: 0 };
+      byFac[key].sum += Number(r.rating) || 0;
+      byFac[key].n += 1;
+      if (r.facilityName) byFac[key].name = r.facilityName;
+      if (prop) byFac[key].property = prop;
+    });
+    const facRows = Object.values(byFac).map(x => {
+      const avg = x.n ? (x.sum / x.n) : 0;
+      const propLabel = x.property || 'Unspecified';
+      const subHtml = x.n
+        ? ('<span class="meta-prop">' + esc(propLabel) + '</span><span class="stars-inline">' + stars(avg) + '</span>')
+        : ('<span class="meta-prop">' + esc(propLabel) + '</span><span>no responses yet</span>');
+      return {
+        label: x.name || x.id,
+        subHtml: subHtml,
+        count: x.n,
+        tone: !x.n ? 'purple' : (avg >= 4 ? 'green' : avg >= 3.2 ? 'orange' : 'red'),
+        avg: avg
+      };
+    }).sort((a, b) => b.count - a.count || b.avg - a.avg || a.label.localeCompare(b.label)).slice(0, 12);
+    renderBarRows(document.getElementById('dashFacilities'), facRows, { wide: true });
+    updateDashFilterChip();
+
+    // Seed from live facilities so new/edited properties appear even with 0 responses.
+    // Use full range data (not property-filtered) so every property stays tappable to switch.
+    const byProp = {};
+    (facilitiesCache || []).forEach(f => {
+      if (f && f.active === false) return;
+      const key = String(f.property || '').trim() || 'Unspecified';
+      if (!byProp[key]) byProp[key] = { sum: 0, n: 0, facilities: 0 };
+      byProp[key].facilities += 1;
+    });
+    (dashResponses || []).map(enrichResponse).forEach(r => {
+      const key = livePropertyKey(r);
+      if (!byProp[key]) byProp[key] = { sum: 0, n: 0, facilities: 0 };
+      byProp[key].sum += Number(r.rating) || 0;
+      byProp[key].n += 1;
+    });
+    const propRows = Object.keys(byProp).map(k => {
+      const item = byProp[k];
+      const avg = item.n ? (item.sum / item.n) : 0;
+      const facBadge = item.facilities
+        ? ('<span class="fac-badge">' + item.facilities + ' facilit' + (item.facilities === 1 ? 'y' : 'ies') + '</span>')
+        : '<span class="fac-badge">responses only</span>';
+      const subHtml = item.n
+        ? ('<span class="stars-inline">' + stars(avg) + '</span>' + facBadge)
+        : (facBadge + '<span>no responses yet</span>');
+      return {
+        label: k,
+        property: k,
+        subHtml: subHtml,
+        count: item.n,
+        right: item.n,
+        tone: 'purple',
+        avg: avg,
+        _facilities: item.facilities || 0
+      };
+    }).sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      if (b._facilities !== a._facilities) return b._facilities - a._facilities;
+      return a.label.localeCompare(b.label);
+    }).slice(0, 12);
+    renderBarRows(document.getElementById('dashProperties'), propRows, {
+      wide: true,
+      selectedProperty: selectedProperty
+    });
+
+    const byType = {};
+    rows.forEach(r => {
+      const key = r.facilityTypeName || r.facilityType || 'Other';
+      byType[key] = (byType[key] || 0) + 1;
+    });
+    renderBarRows(document.getElementById('dashTypes'), Object.keys(byType).map(k => ({
+      label: k, count: byType[k], tone: 'green'
+    })).sort((a, b) => b.count - a.count));
+
+    const issueCount = {};
+    rows.forEach(r => {
+      (r.issues || []).forEach(issue => {
+        const k = String(issue || '').trim();
+        if (!k) return;
+        issueCount[k] = (issueCount[k] || 0) + 1;
+      });
+    });
+    const issuesEl = document.getElementById('dashIssues');
+    if (issuesEl) {
+      const topIssues = Object.keys(issueCount).sort((a, b) => issueCount[b] - issueCount[a]).slice(0, 14);
+      issuesEl.innerHTML = topIssues.length
+        ? topIssues.map((k) => '<span class="issue-pill">' + esc(k) + '<span class="issue-count">' + issueCount[k] + '</span></span>').join('')
+        : '<div class="empty" style="padding:28px 8px;width:100%;text-align:center;">No issues reported</div>';
+    }
+
+    const attention = rows.filter(r => Number(r.rating) > 0 && Number(r.rating) <= 3).slice(0, 8);
+    const attEl = document.getElementById('dashAttention');
+    if (attEl) {
+      attEl.innerHTML = attention.length ? attention.map(r => {
+        const when = new Date(r.createdAt || r.submittedAt);
+        const whenStr = isNaN(when) ? '' : when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        const snippet = [(r.issues && r.issues.length) ? r.issues.join(', ') : '', r.comment || ''].filter(Boolean).join(' — ') || 'No comment left';
+        const mid = Number(r.rating) === 3;
+        const prop = livePropertyKey(r);
+        const tap = prop ? (' is-clickable" data-property="' + esc(prop) + '" role="button" tabindex="0') : '';
+        return '<div class="attention-item' + tap + '">' +
+          '<div class="badge' + (mid ? ' mid' : '') + '">' + esc(String(r.rating)) + '★</div>' +
+          '<div><p class="title">' + esc(r.facilityName || r.facilityId || 'Facility') + '</p>' +
+          '<p class="snippet">' + esc(snippet) + '</p></div>' +
+          '<div class="when">' + esc(whenStr) + '</div></div>';
+      }).join('') : '<div class="empty" style="padding:28px 8px;">Nothing urgent — nice work</div>';
+    }
+
+    const comments = rows.filter(r => (r.comment || '').trim()).slice(0, 12);
+    const cEl = document.getElementById('dashComments');
+    if (cEl) {
+      cEl.innerHTML = comments.length ? comments.map(r => {
+        const when = new Date(r.createdAt || r.submittedAt);
+        const whenStr = isNaN(when) ? '' : when.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        const prop = livePropertyKey(r);
+        const tap = prop ? (' is-clickable" data-property="' + esc(prop) + '" role="button" tabindex="0') : '';
+        return '<div class="comment-card' + tap + '"><div class="top"><span class="who">' + esc(r.facilityName || r.facilityId || '') +
+          ' · <span class="stars-inline">' + stars(r.rating) + '</span></span>' +
+          '<span class="muted" style="font-size:0.7rem;">' + esc(whenStr) + '</span></div>' +
+          '<p class="body">“' + esc(r.comment.trim()) + '”</p></div>';
+      }).join('') : '<div class="empty" style="padding:28px 8px;">No comments yet</div>';
+    }
+
+    renderTrend(document.getElementById('dashTrend'), rows);
+    renderHeat(document.getElementById('dashHeat'), rows);
+
+    const recent = rows.slice(0, 30);
+    setText('recentCount', recent.length ? ('Showing ' + recent.length + (total > recent.length ? ' of ' + total : '')) : '');
+    const recentEl = document.getElementById('dashRecent');
+    if (recentEl) {
+      recentEl.innerHTML = recent.length
+        ? ('<table class="recent-table"><thead><tr><th>When</th><th>Facility</th><th>Rating</th><th>Source</th><th>Issues / Comment</th></tr></thead><tbody>' +
+          recent.map(r => {
+            const when = new Date(r.createdAt || r.submittedAt);
+            const whenStr = isNaN(when) ? '—' : when.toLocaleString();
+            const detail = [(r.issues && r.issues.length) ? r.issues.join(', ') : '', r.comment || ''].filter(Boolean).join(' · ') || '—';
+            const srcClass = String(r.source || 'web').toLowerCase();
+            return '<tr><td>' + esc(whenStr) + '</td><td><div class="id">' + esc(r.facilityId || '') + '</div>' +
+              '<div class="muted">' + esc(r.facilityName || r.property || '') + '</div></td>' +
+              '<td><span class="stars-inline">' + stars(r.rating) + '</span></td>' +
+              '<td><span class="source-chip ' + esc(srcClass) + '">' + esc(srcClass) + '</span></td>' +
+              '<td>' + esc(detail) + '</td></tr>';
+          }).join('') + '</tbody></table>')
+        : '<div class="empty">No responses yet</div>';
+    }
+
+    const updated = document.getElementById('dashUpdated');
+    if (updated) updated.textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function loadDashboard(force) {
+    // Always refresh facilities so Refresh / filters pick up edits
+    try {
+      facilitiesCache = await FacilitySupabase.listFacilities();
+    } catch (_) {}
+    syncDashboardResponsesWithFacilities();
+    fillDashFacilityFilter();
+
+    if (dashLoadedOnce && !force) {
+      renderDashboard();
+      return;
+    }
+
+    const range = document.getElementById('dashRange').value;
+    const days = range === 'all' ? null : Number(range);
+    const sub = document.getElementById('kpiTotalSub');
+    if (sub) sub.textContent = 'Loading…';
+    try {
+      dashResponses = await FacilitySupabase.listResponses({
+        days: days,
+        limit: 2000,
+        facilityId: document.getElementById('dashFacility').value || null
+      });
+      dashLoadedOnce = true;
+      syncDashboardResponsesWithFacilities();
+      fillDashFacilityFilter();
+      renderDashboard();
+    } catch (err) {
+      console.error(err);
+      const msg = err.message || String(err);
+      const kt = document.getElementById('kpiTotal');
+      const ks = document.getElementById('kpiTotalSub');
+      if (kt) kt.textContent = '—';
+      if (ks) ks.textContent = 'Could not load';
+      const recent = document.getElementById('dashRecent');
+      if (recent) recent.innerHTML =
+        '<div class="empty">Could not load responses.<br><small>' + esc(msg) +
+        '</small><br>Run <code>supabase-admin-dashboard.sql</code> in Supabase.</div>';
+      if (/unauthorized|sign in|session/i.test(msg)) showLogin(msg);
+    }
+  }
+
+  
+  function updateDashFilterChip() {
+    const chip = document.getElementById('dashFilterChip');
+    const label = document.getElementById('dashFilterLabel');
+    if (!chip || !label) return;
+    const property = document.getElementById('dashProperty').value;
+    const rating = dashRatingFilter ? Number(dashRatingFilter) : 0;
+    if (!property && !rating) {
+      chip.classList.remove('is-on');
+      return;
+    }
+    const parts = [];
+    if (property) {
+      const facCount = (facilitiesCache || []).filter(f => {
+        if (!f || f.active === false) return false;
+        return (String(f.property || '').trim() || 'Unspecified') === property;
+      }).length;
+      parts.push(property + (facCount ? (' · ' + facCount + ' facilit' + (facCount === 1 ? 'y' : 'ies')) : ''));
+    }
+    if (rating) {
+      parts.push(rating + '★ ' + (RATING_LABELS[rating] || ''));
+    }
+    label.textContent = parts.join(' · ');
+    chip.classList.add('is-on');
+  }
+
+  function selectDashboardProperty(propertyName) {
+    const sel = document.getElementById('dashProperty');
+    const next = propertyName || '';
+    const same = sel.value === next;
+    let target = (same && next) ? '' : next;
+
+    if (target) {
+      let matched = null;
+      [].forEach.call(sel.options, o => {
+        if (o.value === target) matched = o.value;
+      });
+      if (!matched) {
+        const opt = document.createElement('option');
+        opt.value = target;
+        opt.textContent = target;
+        sel.appendChild(opt);
+        matched = target;
+      }
+      sel.value = matched;
+    } else {
+      sel.value = '';
+    }
+
+    const facSel = document.getElementById('dashFacility');
+    if (facSel) facSel.value = '';
+    renderDashboard();
+  }
+
+  function bindPropertyTap(el) {
+    if (!el || el._propertyTapBound) return;
+    el._propertyTapBound = true;
+    el.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-property]');
+      if (!row || !el.contains(row)) return;
+      selectDashboardProperty(row.getAttribute('data-property'));
+    });
+    el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const row = e.target.closest('[data-property]');
+      if (!row || !el.contains(row)) return;
+      e.preventDefault();
+      selectDashboardProperty(row.getAttribute('data-property'));
+    });
+  }
+  bindPropertyTap(document.getElementById('dashProperties'));
+  bindPropertyTap(document.getElementById('dashAttention'));
+  bindPropertyTap(document.getElementById('dashComments'));
+
+  function selectDashboardRating(rating) {
+    const next = rating ? String(rating) : '';
+    dashRatingFilter = (dashRatingFilter === next) ? '' : next;
+    renderDashboard();
+  }
+
+  const dashRatingsEl = document.getElementById('dashRatings');
+  if (dashRatingsEl && !dashRatingsEl._ratingTapBound) {
+    dashRatingsEl._ratingTapBound = true;
+    dashRatingsEl.addEventListener('click', (e) => {
+      const row = e.target.closest('[data-rating]');
+      if (!row || !dashRatingsEl.contains(row)) return;
+      selectDashboardRating(row.getAttribute('data-rating'));
+    });
+    dashRatingsEl.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const row = e.target.closest('[data-rating]');
+      if (!row || !dashRatingsEl.contains(row)) return;
+      e.preventDefault();
+      selectDashboardRating(row.getAttribute('data-rating'));
+    });
+  }
+
+  const clearBtn = document.getElementById('dashFilterClear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      document.getElementById('dashFacility').value = '';
+      document.getElementById('dashProperty').value = '';
+      dashRatingFilter = '';
+      renderDashboard();
+    });
+  }
+
+
+  function dashboardReportMeta() {
+    const rangeEl = document.getElementById('dashRange');
+    const range = rangeEl && rangeEl.selectedOptions[0] ? rangeEl.selectedOptions[0].textContent : 'Range';
+    const property = document.getElementById('dashProperty').value || 'All properties';
+    const facility = document.getElementById('dashFacility').value || 'All facilities';
+    const rating = dashRatingFilter
+      ? (dashRatingFilter + '★ ' + (RATING_LABELS[Number(dashRatingFilter)] || ''))
+      : 'All scores';
+    return { range: range, property: property, facility: facility, rating: rating };
+  }
+
+  async function shareDashboardPdf() {
+    if (!window.html2canvas || !window.jspdf) {
+      alert('PDF library failed to load. Check your network and try again.');
+      return;
+    }
+    const root = document.getElementById('dashReport');
+    if (!root || document.getElementById('viewDashboard').hidden) {
+      alert('Open the Dashboard tab first.');
+      return;
+    }
+    const btn = document.getElementById('dashSharePdf');
+    const prev = btn ? btn.textContent : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Preparing…';
+    }
+    let banner = null;
+    try {
+      const meta = dashboardReportMeta();
+      banner = document.createElement('div');
+      banner.className = 'dash-pdf-banner';
+      banner.innerHTML =
+        '<strong>Guest feedback report</strong>' +
+        '<span>' + esc(meta.range) + ' · ' + esc(meta.property) +
+        (meta.facility !== 'All facilities' ? ' · ' + esc(meta.facility) : '') +
+        (meta.rating !== 'All scores' ? ' · ' + esc(meta.rating) : '') +
+        '</span>' +
+        '<span class="muted">Generated ' + new Date().toLocaleString() + '</span>';
+      root.insertBefore(banner, root.firstChild);
+
+      await new Promise(r => requestAnimationFrame(() => setTimeout(r, 80)));
+
+      const canvas = await html2canvas(root, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#f5f5f7',
+        logging: false,
+        imageTimeout: 0,
+        ignoreElements: (el) => !!(el && el.classList && el.classList.contains('pdf-hide'))
+      });
+
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true
+      });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 8;
+      const usableW = pageW - margin * 2;
+      const usableH = pageH - margin * 2;
+      const imgW = usableW;
+      const fullImgH = (canvas.height * imgW) / canvas.width;
+      const srcPageH = (usableH / fullImgH) * canvas.height;
+
+      let y = 0;
+      let page = 0;
+      while (y < canvas.height - 1) {
+        if (page > 0) pdf.addPage();
+        const sliceH = Math.min(srcPageH, canvas.height - y);
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = Math.max(1, Math.ceil(sliceH));
+        const ctx = pageCanvas.getContext('2d');
+        ctx.fillStyle = '#f5f5f7';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        ctx.drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        const sliceImgH = (sliceH * imgW) / canvas.width;
+        pdf.addImage(pageCanvas.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, imgW, sliceImgH, undefined, 'FAST');
+        y += sliceH;
+        page += 1;
+        if (page > 40) break; // safety
+      }
+
+      const stamp = new Date().toISOString().slice(0, 10);
+      const propSlug = String(meta.property).replace(/[^a-z0-9-_]+/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'all';
+      const fileName = 'feedback-report-' + propSlug + '-' + stamp + '.pdf';
+
+      const blob = pdf.output('blob');
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      let shared = false;
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: 'Guest feedback report',
+            text: meta.range + ' · ' + meta.property
+          });
+          shared = true;
+          toastMsg('Report shared');
+        } catch (shareErr) {
+          if (shareErr && shareErr.name === 'AbortError') {
+            toastMsg('Share cancelled');
+            shared = true;
+          }
+        }
+      }
+      if (!shared) {
+        pdf.save(fileName);
+        toastMsg('Report PDF downloaded');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Could not create report PDF: ' + (err.message || err));
+    } finally {
+      if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = prev;
+      }
+    }
+  }
+
+  document.getElementById('dashSharePdf').addEventListener('click', () => shareDashboardPdf());
+
+  document.getElementById('dashRefresh').addEventListener('click', async () => {
+    const btn = document.getElementById('dashRefresh');
+    const prev = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Refreshing…';
+    try {
+      dashLoadedOnce = false;
+      await loadDashboard(true);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  });
+  document.getElementById('dashRange').addEventListener('change', () => {
+    dashLoadedOnce = false;
+    loadDashboard(true);
+  });
+  document.getElementById('dashFacility').addEventListener('change', () => {
+    dashLoadedOnce = false;
+    loadDashboard(true);
+  });
+  document.getElementById('dashProperty').addEventListener('change', () => {
+    document.getElementById('dashFacility').value = '';
+    renderDashboard();
+  });
+
+  function openPrint(facilityOrId) {
+    currentFacility = typeof facilityOrId === 'object'
+      ? facilityOrId
+      : (facilitiesCache.find(f => f.id === facilityOrId) || FacilityKit.getFacility(facilityOrId));
+    if (!currentFacility) return;
+    currentUrls = FacilityKit.urlsFor(currentFacility.id);
+    document.getElementById('modalTitle').textContent = 'Sign PDF · ' + currentFacility.id;
+    document.getElementById('modalUrls').textContent =
+      (currentFacility.name || currentFacility.typeName || '') +
+      (currentFacility.property ? ' · ' + currentFacility.property : '');
+    document.getElementById('signName').textContent =
+      (currentFacility.name || currentFacility.typeName || '').toUpperCase() + '?';
+    document.getElementById('signId').textContent = currentFacility.id;
+    fitTitle();
+    setSignSize(signSize);
+    modal.classList.add('is-on');
+    requestAnimationFrame(() => {
+      renderQr(currentUrls.qr);
+      if (openPrint._autoPdf) {
+        openPrint._autoPdf = false;
+        setTimeout(() => downloadPdf(), 350);
+      }
+    });
+  }
+
+  function setSignSize(size) {
+    signSize = size || 'a4';
+    sign.classList.remove('size-a4', 'size-a5', 'size-a6', 'size-sticker');
+    sign.classList.add('size-' + signSize);
+    document.querySelectorAll('.size-tabs button').forEach(b => {
+      b.classList.toggle('is-on', b.dataset.size === signSize);
+    });
+    if (currentUrls) renderQr(currentUrls.qr);
+  }
+
+  function renderQr(url) {
+    const box = document.getElementById('signQr');
+    box.innerHTML = '';
+    const frame = box.parentElement.getBoundingClientRect();
+    // Generate denser QR for crisp print (2x display size, min 220)
+    const cssPx = Math.max(90, Math.floor(Math.min(frame.width || 160, frame.height || 160) * 0.96));
+    const px = Math.max(220, cssPx * 2);
+    qrInstance = new QRCode(box, {
+      text: url,
+      width: px,
+      height: px,
+      correctLevel: QRCode.CorrectLevel.H,
+      colorDark: '#1B3022',
+      colorLight: '#ffffff'
+    });
+  }
+
+  function fitTitle() {
+    const el = document.getElementById('signName');
+    const len = (el.textContent || '').length;
+    el.classList.toggle('is-long', len > 14);
+    el.classList.toggle('is-xl', len > 22);
+  }
+
+  document.querySelectorAll('.size-tabs button').forEach(b => {
+    b.addEventListener('click', () => setSignSize(b.dataset.size));
+  });
+  document.getElementById('closeModal').addEventListener('click', () => modal.classList.remove('is-on'));
+  document.getElementById('copyQrUrl').addEventListener('click', () => currentUrls && copyText(currentUrls.qr));
+  document.getElementById('copyNfcUrl').addEventListener('click', () => currentUrls && copyText(currentUrls.nfc));
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('is-on'); });
+
+  const PAGE_MM = {
+    a4: [210, 297],
+    a5: [148, 210],
+    a6: [105, 148],
+    sticker: [100, 140]
+  };
+
+  async function downloadPdf() {
+    if (!currentFacility || !window.html2canvas || !window.jspdf) {
+      alert('PDF library failed to load. Check your network and try again.');
+      return;
+    }
+    const btn = document.getElementById('pdfBtn');
+    const prev = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+    try {
+      if (currentUrls) renderQr(currentUrls.qr);
+      await new Promise(r => setTimeout(r, 120));
+
+      const canvas = await html2canvas(sign, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#f7f2e9',
+        logging: false,
+        imageTimeout: 0
+      });
+
+      const [w, h] = PAGE_MM[signSize] || PAGE_MM.a4;
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: h >= w ? 'portrait' : 'landscape',
+        unit: 'mm',
+        format: [w, h],
+        compress: true
+      });
+      const img = canvas.toDataURL('image/png', 1.0);
+      pdf.addImage(img, 'PNG', 0, 0, w, h, undefined, 'FAST');
+      const safeName = String(currentFacility.name || currentFacility.id)
+        .replace(/[^a-z0-9-_]+/gi, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+      pdf.save((currentFacility.id || 'facility') + '-' + safeName + '-' + signSize + '.pdf');
+      toastMsg('PDF downloaded');
+    } catch (err) {
+      console.error(err);
+      alert('Could not generate PDF: ' + (err.message || err));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = prev;
+    }
+  }
+
+  document.getElementById('pdfBtn').addEventListener('click', () => downloadPdf());
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    let style = document.getElementById('printPageSizeStyle');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'printPageSizeStyle';
+      document.head.appendChild(style);
+    }
+    const pageSizes = {
+      a4: '210mm 297mm',
+      a5: '148mm 210mm',
+      a6: '105mm 148mm',
+      sticker: '100mm 140mm'
+    };
+    style.textContent = '@media print { @page { size: ' + (pageSizes[signSize] || pageSizes.a4) + '; margin: 0; } }';
+    requestAnimationFrame(() => window.print());
+  });
+
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({ facilities: facilitiesCache }, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'facility-registry.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('importFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      if (!data || !Array.isArray(data.facilities)) throw new Error('Invalid registry');
+      let n = 0;
+      for (const f of data.facilities) {
+        await FacilitySupabase.upsertFacility(f);
+        n += 1;
+      }
+      await renderList();
+      toastMsg('Imported ' + n + ' facilities');
+    } catch (err) {
+      alert('Import failed: ' + (err.message || err));
+    }
+    e.target.value = '';
+  });
+
+  const loginScreen = document.getElementById('loginScreen');
+  const adminApp = document.getElementById('adminApp');
+  const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+  const loginBtn = document.getElementById('loginBtn');
+  const userChip = document.getElementById('userChip');
+
+  function showLogin(msg) {
+    adminApp.hidden = true;
+    loginScreen.hidden = false;
+    if (msg) {
+      loginError.textContent = msg;
+      loginError.classList.add('is-on');
+    } else {
+      loginError.textContent = '';
+      loginError.classList.remove('is-on');
+    }
+  }
+
+  function showAdmin(session) {
+    loginScreen.hidden = true;
+    adminApp.hidden = false;
+    if (userChip) userChip.textContent = session.displayName || session.username || 'Signed in';
+    renderList();
+  }
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    loginError.classList.remove('is-on');
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Signing in…';
+    try {
+      const session = await FacilitySupabase.login(
+        document.getElementById('loginUser').value,
+        document.getElementById('loginPass').value
+      );
+      document.getElementById('loginPass').value = '';
+      showAdmin(session);
+      toastMsg('Signed in');
+    } catch (err) {
+      console.error(err);
+      loginError.textContent = err.message || 'Login failed';
+      loginError.classList.add('is-on');
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Sign in';
+    }
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await FacilitySupabase.logout();
+    showLogin();
+    toastMsg('Signed out');
+  });
+
+  (async function boot() {
+    try {
+      const session = await FacilitySupabase.verifySession();
+      if (session) showAdmin(session);
+      else showLogin();
+    } catch (err) {
+      console.error(err);
+      showLogin('Could not verify session. Run supabase-facility-admin-auth.sql in Supabase.');
+    }
+  })();
+})();
+</script>
+</body>
+</html>
