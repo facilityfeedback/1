@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+  <title>Report It</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f2f2f7;
+      --card: #ffffff;
+      --label: #000000;
+      --secondary: rgba(60, 60, 67, 0.6);
+      --tertiary: rgba(60, 60, 67, 0.3);
+      --separator: rgba(60, 60, 67, 0.16);
+      --blue: #007aff;
+      --green: #34c759;
+      --red: #ff3b30;
+      --red-bg: rgba(255, 59, 48, 0.12);
+      --fill: rgba(120, 120, 128, 0.12);
+      --chevron: #c7c7cc;
+      --bar: rgba(242, 242, 247, 0.96);
+      --bar-blur: rgba(242, 242, 247, 0.72);
+      --pressed: rgba(120, 120, 128, 0.16);
+      --icon-bg: rgba(0, 122, 255, 0.12);
+      --hover: rgba(120, 120, 128, 0.08);
+      --page: 20px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --card: #1c1c1e;
+        --label: #ffffff;
+        --secondary: rgba(235, 235, 245, 0.6);
+        --tertiary: rgba(235, 235, 245, 0.3);
+        --separator: rgba(84, 84, 88, 0.65);
+        --blue: #0a84ff;
+        --green: #30d158;
+        --red: #ff453a;
+        --red-bg: rgba(255, 69, 58, 0.18);
+        --fill: rgba(120, 120, 128, 0.24);
+        --chevron: rgba(235, 235, 245, 0.3);
+        --bar: rgba(0, 0, 0, 0.96);
+        --bar-blur: rgba(28, 28, 30, 0.72);
+        --pressed: rgba(255, 255, 255, 0.08);
+        --icon-bg: rgba(10, 132, 255, 0.22);
+        --hover: rgba(255, 255, 255, 0.06);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    html { scroll-padding-bottom: calc(128px + env(safe-area-inset-bottom)); }
+    .chip, .row, textarea, input, select { scroll-margin-bottom: calc(128px + env(safe-area-inset-bottom)); }
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.35;
+      color: var(--label);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-text-size-adjust: 100%;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    .app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: max(12px, env(safe-area-inset-top)) 0 calc(128px + env(safe-area-inset-bottom));
+    }
+    body:has(#form-view.hidden) .app {
+      padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    }
+    .mast {
+      padding: 18px var(--page) 6px;
+    }
+    .eyebrow {
+      margin: 0 0 2px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.12;
+      font-weight: 700;
+      letter-spacing: -0.022em;
+    }
+    .lede {
+      margin: 6px 0 0;
+      color: var(--secondary);
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+    section { margin-top: 28px; }
+    h2 {
+      margin: 0 var(--page) 7px;
+      padding-left: 16px;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: -0.008em;
+      text-transform: uppercase;
+    }
+    .group {
+      margin: 0 var(--page);
+      background: var(--card);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .group.rows > * + * { position: relative; }
+    .group.rows > * + *::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16px;
+      right: 0;
+      height: 1px;
+      background: var(--separator);
+      pointer-events: none;
+    }
+    .group.rows > .icon-row + .icon-row::before,
+    .group.rows > .icon-row + .previews::before { left: 58px; }
+    .row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 52px;
+      margin: 0;
+      padding: 10px 16px;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .row.static { cursor: default; }
+    .icon-wrap {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--icon-bg);
+      color: var(--blue);
+    }
+    .icon-wrap svg { width: 18px; height: 18px; display: block; }
+    .row-title {
+      flex: 0 0 auto;
+      font-size: 17px;
+      letter-spacing: -0.022em;
+    }
+    .row-title.action { color: var(--blue); font-weight: 400; }
+    select {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0 18px 0 12px;
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      font-size: 17px;
+      text-align: right;
+      letter-spacing: -0.022em;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      text-overflow: ellipsis;
+    }
+    select:has(option[value=""]:checked) { color: var(--tertiary); }
+    .disclosure::after {
+      content: "";
+      margin-left: auto;
+      width: 7px;
+      height: 12px;
+      flex: 0 0 auto;
+      background: var(--chevron);
+      -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+      mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+    }
+    .pick::after {
+      content: "";
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      width: 7px;
+      height: 12px;
+      transform: translateY(-50%);
+      background: var(--chevron);
+      pointer-events: none;
+      -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+      mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+    }
+    .stack {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      cursor: text;
+    }
+    .stack .row-title {
+      color: var(--secondary);
+      font-size: 13px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font-size: 17px;
+      letter-spacing: -0.022em;
+      color: var(--label);
+    }
+    input::placeholder, textarea::placeholder { color: var(--tertiary); }
+    textarea {
+      display: block;
+      min-height: 112px;
+      padding: 14px 16px 8px;
+      resize: none;
+      line-height: 1.4;
+    }
+    .note { display: block; }
+    .pad { padding: 14px 16px 16px; }
+    .inside-label {
+      margin: 14px 0 8px;
+      color: var(--secondary);
+      font-size: 13px;
+    }
+    .inside-label:first-child { margin-top: 0; }
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      border: 0;
+      background: var(--fill);
+      color: var(--label);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 10px 12px;
+      font-size: 16px;
+      font-weight: 590;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+    .choice-grid .chip { width: 100%; }
+    .chips .chip {
+      min-height: 36px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .chip[aria-pressed="true"] { background: var(--blue); color: #fff; }
+    .previews:empty { display: none; }
+    .previews {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 14px 16px;
+      scrollbar-width: none;
+    }
+    .previews::-webkit-scrollbar { display: none; }
+    .shot {
+      position: relative;
+      width: 84px;
+      height: 84px;
+      flex: 0 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--fill);
+    }
+    .shot img, .shot video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .shot button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 15px;
+      line-height: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .footnote {
+      margin: 7px var(--page) 0;
+      padding: 0 16px;
+      color: var(--secondary);
+      font-size: 13px;
+      line-height: 1.35;
+      letter-spacing: -0.006em;
+    }
+    .footnote:empty { display: none; }
+    .banner {
+      margin: 16px var(--page) 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--red-bg);
+      color: var(--red);
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+    .submit-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 12px var(--page) calc(12px + env(safe-area-inset-bottom));
+      background: var(--bar);
+      border-top: 1px solid var(--separator);
+    }
+    @supports ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) {
+      .submit-bar {
+        background: var(--bar-blur);
+        backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+      }
+    }
+    body:has(#form-view.hidden) .submit-bar { display: none; }
+    .submit-inner { max-width: 640px; margin: 0 auto; }
+    button.primary {
+      display: block;
+      width: 100%;
+      height: 50px;
+      border: 0;
+      border-radius: 14px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.022em;
+      cursor: pointer;
+    }
+    button.primary:disabled { opacity: 0.45; cursor: wait; }
+    #progress { text-align: center; margin-top: 8px; padding: 0; }
+    .hidden { display: none !important; }
+    .done {
+      padding: 48px var(--page) 0;
+      text-align: center;
+    }
+    .mark {
+      width: 76px;
+      height: 76px;
+      margin: 12px auto 18px;
+      color: var(--green);
+    }
+    .done h1 { font-size: 28px; }
+    .done .lede { margin-bottom: 22px; }
+    .receipt { padding: 18px 16px 16px; }
+    .receipt .inside-label { margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .ref {
+      margin: 0;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums;
+    }
+    .receipt .footnote { margin: 6px 0 0; padding: 0; }
+    .done .primary { margin-top: 22px; }
+    button:disabled.row { opacity: 0.4; cursor: default; }
+    @media (hover: hover) {
+      .row:not(.static):hover { background: var(--hover); }
+      .chip:hover { filter: brightness(0.98); }
+      button.primary:hover { filter: brightness(1.06); }
+    }
+    .row:not(.static):active { background: var(--pressed); }
+    .chip:active { transform: scale(0.98); }
+    button.primary:active:not(:disabled) { opacity: 0.72; }
+    .row:focus-visible, .chip:focus-visible, button.primary:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: -2px;
+    }
+    button.primary:focus-visible { outline-offset: 3px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .done:not(.hidden) .mark { animation: pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.6); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main id="form-view">
+    <header class="mast">
+      <p class="eyebrow">Report It</p>
+      <h1>New Observation</h1>
+      <p class="lede">Photo, place, and what you saw. No login.</p>
+    </header>
+    <p id="error" class="banner hidden" role="alert"></p>
+      <section>
+        <h2>Photo or Video</h2>
+        <div class="group rows">
+          <button class="row icon-row disclosure" type="button" id="take-btn">
+            <span class="icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                <path d="M8.2 7.2 9.4 5.5h5.2l1.2 1.7H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9.2a2 2 0 0 1 2-2h3.2Z"/>
+                <circle cx="12" cy="13.2" r="3.1"/>
+              </svg>
+            </span>
+            <span class="row-title">Take Photo or Video</span>
+          </button>
+          <button class="row icon-row disclosure" type="button" id="upload-btn">
+            <span class="icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3.5" y="5" width="13" height="13" rx="2.2"/>
+                <path d="M8.5 18.5h10a2.2 2.2 0 0 0 2.2-2.2V7.2"/>
+              </svg>
+            </span>
+            <span class="row-title">Choose from Library</span>
+          </button>
+          <input id="take-input" class="hidden" type="file" accept="image/*,video/*" capture="environment">
+          <input id="upload-input" class="hidden" type="file" accept="image/*,video/*" multiple>
+          <div id="previews" class="previews"></div>
+        </div>
+        <p id="media-hint" class="footnote">Add at least one photo or video.</p>
+      </section>
+      <section>
+        <h2>Location</h2>
+        <div class="group rows">
+          <label class="row pick">
+            <span class="row-title">Project</span>
+            <select id="project"></select>
+          </label>
+          <label class="row pick">
+            <span class="row-title">Zone</span>
+            <select id="zone"></select>
+          </label>
+          <label class="row pick">
+            <span class="row-title">Sub-location</span>
+            <select id="sub"></select>
+          </label>
+          <label class="row stack">
+            <span class="row-title">Or add a sub-location</span>
+            <input id="sub-custom" type="text" placeholder="Building, floor, or area" autocomplete="off">
+          </label>
+          <label class="row pick">
+            <span class="row-title">Spot</span>
+            <select id="spot"></select>
+          </label>
+          <label class="row stack">
+            <span class="row-title">Or add a more specific spot</span>
+            <input id="spot-custom" type="text" placeholder="Room, grid, riser…" autocomplete="off">
+          </label>
+        </div>
+        <p id="geo" class="footnote">Finding this device…</p>
+      </section>
+      <section>
+        <h2>Issue</h2>
+        <div class="group pad">
+          <p class="inside-label">Category</p>
+          <div id="categories" class="choice-grid"></div>
+          <p class="inside-label">What did you notice?</p>
+          <div id="issues" class="chips"></div>
+        </div>
+      </section>
+      <section>
+        <h2>Additional Information</h2>
+        <div class="group rows">
+          <label class="note">
+            <span class="hidden">Optional note</span>
+            <textarea id="notes" placeholder="What should someone know?"></textarea>
+          </label>
+          <button class="row icon-row" type="button" id="dictate">
+            <span class="icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <rect x="9" y="3" width="6" height="11" rx="3"/>
+                <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.2M8.5 20.2h7"/>
+              </svg>
+            </span>
+            <span class="row-title action" id="dictate-label">Dictate</span>
+          </button>
+        </div>
+        <p id="dictate-status" class="footnote"></p>
+      </section>
+    </main>
+    <main id="done-view" class="done hidden">
+      <svg class="mark" viewBox="0 0 76 76" aria-hidden="true">
+        <circle cx="38" cy="38" r="38" fill="currentColor"/>
+        <path d="M22 39.5 33 50.5 55 27" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>Submitted</h1>
+      <p class="lede">Thank you. Your observation has been submitted successfully.</p>
+      <div class="group receipt">
+        <p class="inside-label">Reference</p>
+        <p id="reference" class="ref"></p>
+        <p id="when" class="footnote"></p>
+      </div>
+      <button class="primary" type="button" id="another">File Another Observation</button>
+    </main>
+  </div>
+  <div class="submit-bar">
+    <div class="submit-inner">
+      <button class="primary" type="button" id="submit">Submit Observation</button>
+      <p id="progress" class="footnote" aria-live="polite"></p>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = "https://hhxbcnistdyrwrjuxkzf.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_fXFDEnf0m642GEyvAcH5bQ_CTOKljc5";
+    const SITE_ZONES = [
+      { slug: "building", name: "Building", subs: [
+        { slug: "ground-floor", name: "Ground Floor", spots: [["lobby","Lobby"],["corridor","Corridor"],["stair-a","Stair A"]] },
+        { slug: "upper-floor", name: "Upper Floor", spots: [["room","Room"],["plant-room","Plant Room"],["riser","Riser"]] },
+        { slug: "roof", name: "Roof", spots: [["plant-deck","Plant Deck"],["roof-edge","Roof Edge"]] }
+      ]},
+      { slug: "external-works", name: "External Works", subs: [
+        { slug: "arrival", name: "Arrival", spots: [["drop-off","Drop-off"],["main-entrance","Main Entrance"]] },
+        { slug: "landscape", name: "Landscape", spots: [["garden","Garden"],["pathway","Pathway"],["pool-deck","Pool Deck"]] },
+        { slug: "service-yard", name: "Service Yard", spots: [["loading","Loading"],["waste","Waste"]] }
+      ]},
+      { slug: "site-compound", name: "Site Compound", subs: [
+        { slug: "main-gate", name: "Main Gate", spots: [["vehicle-gate","Vehicle Gate"],["pedestrian-gate","Pedestrian Gate"]] },
+        { slug: "laydown", name: "Laydown", spots: [["material-yard","Material Yard"],["storage","Storage"]] },
+        { slug: "welfare", name: "Welfare", spots: [["site-office","Site Office"],["canteen","Canteen"]] }
+      ]}
+    ];
+    const PROJECTS = [
+      "AMAALA HOSPITAL",
+      "AMAALA Staff VILLAGE",
+      "Daraah Resort",
+      "MLOF",
+      "Corallium",
+      "Equinox Resort",
+      "Nammos Resort",
+      "Yacht Club",
+      "Six Senses",
+      "Rosewood"
+    ].map((name) => ({
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
+      name,
+      zones: SITE_ZONES
+    }));
+    const CATEGORIES = [["safety","Safety"],["quality","Quality"],["housekeeping","Housekeeping"],["environmental","Environmental"]];
+    const ISSUES = [["leak","Leak","quality"],["crack-or-damage","Crack or damage","quality"],["obstruction","Obstruction","safety"],["missing-guard","Missing guard","safety"],["electrical","Electrical","safety"],["debris","Debris","housekeeping"],["incomplete-work","Incomplete work","quality"],["other","Other",null]];
+    const files = [];
+    const geo = { latitude: null, longitude: null, accuracy: null };
+    let category = "";
+    let issue = "";
+    const $ = (id) => document.getElementById(id);
+    function slugify(value) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "custom"; }
+    function fillSelect(select, items, placeholder) {
+      select.innerHTML = "";
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = placeholder;
+      select.appendChild(empty);
+      items.forEach((item) => {
+        const option = document.createElement("option");
+        option.value = item.slug;
+        option.textContent = item.name;
+        select.appendChild(option);
+      });
+    }
+    function currentProject() { return PROJECTS.find((item) => item.slug === $("project").value) || null; }
+    function currentZone() { const project = currentProject(); if (!project) return null; return project.zones.find((item) => item.slug === $("zone").value) || null; }
+    function currentSub() { const zone = currentZone(); if (!zone) return null; return zone.subs.find((item) => item.slug === $("sub").value) || null; }
+    function refillZones() { const project = currentProject(); fillSelect($("zone"), project ? project.zones : [], "Select"); refillSubs(); }
+    function refillSubs() { const zone = currentZone(); const subs = zone ? zone.subs.map((item) => ({ slug: item.slug, name: item.name })) : []; fillSelect($("sub"), subs, "Select"); refillSpots(); }
+    function refillSpots() { const sub = currentSub(); const spots = sub ? sub.spots.map(([slug, name]) => ({ slug, name })) : []; fillSelect($("spot"), spots, "Select"); }
+    function renderChips(container, items, selected, onPick) {
+      container.innerHTML = "";
+      items.forEach(([id, label]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "chip";
+        button.textContent = label;
+        button.setAttribute("aria-pressed", selected === id ? "true" : "false");
+        button.addEventListener("click", () => onPick(id));
+        container.appendChild(button);
+      });
+    }
+    function renderCategories() { renderChips($("categories"), CATEGORIES, category, (id) => { category = id; renderCategories(); }); }
+    function renderIssues() { renderChips($("issues"), ISSUES, issue, (id) => { issue = id; const match = ISSUES.find((item) => item[0] === id); if (match && match[2]) category = match[2]; renderIssues(); renderCategories(); }); }
+    function showError(message) { const box = $("error"); if (!message) { box.classList.add("hidden"); box.textContent = ""; return; } box.textContent = message; box.classList.remove("hidden"); box.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    function renderPreviews() {
+      const wrap = $("previews");
+      wrap.innerHTML = "";
+      files.forEach((file, index) => {
+        const shot = document.createElement("div");
+        shot.className = "shot";
+        const url = URL.createObjectURL(file);
+        const media = file.type.startsWith("video/") ? document.createElement("video") : document.createElement("img");
+        media.src = url;
+        if (media.tagName === "VIDEO") media.muted = true;
+        shot.appendChild(media);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.setAttribute("aria-label", "Remove");
+        remove.addEventListener("click", () => { URL.revokeObjectURL(url); files.splice(index, 1); renderPreviews(); });
+        shot.appendChild(remove);
+        wrap.appendChild(shot);
+      });
+      $("media-hint").textContent = files.length ? (files.length === 1 ? "1 photo or video added." : files.length + " photos or videos added.") : "Add at least one photo or video.";
+    }
+    function addFiles(list) { Array.from(list || []).forEach((file) => files.push(file)); renderPreviews(); showError(""); }
+    function locate() {
+      const line = $("geo");
+      if (!navigator.geolocation) { line.textContent = "Location is unavailable in this browser. You can still pick the project and zone."; return; }
+      line.textContent = "Finding this device…";
+      navigator.geolocation.getCurrentPosition((position) => {
+        geo.latitude = position.coords.latitude; geo.longitude = position.coords.longitude; geo.accuracy = Math.round(position.coords.accuracy);
+        line.textContent = "Location picked up (" + geo.latitude.toFixed(5) + ", " + geo.longitude.toFixed(5) + ", about " + geo.accuracy + " m).";
+      }, () => { line.textContent = "Location permission was denied or is unavailable. Pick the project and zone instead."; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+    }
+    function applyQuery() {
+      const params = new URLSearchParams(location.search);
+      const project = params.get("project"); const zone = params.get("zone"); const sub = params.get("sub"); const spot = params.get("spot");
+      if (project && PROJECTS.some((item) => item.slug === project)) { $("project").value = project; refillZones(); }
+      if (zone && currentProject() && currentProject().zones.some((item) => item.slug === zone)) { $("zone").value = zone; refillSubs(); }
+      if (sub && currentZone() && currentZone().subs.some((item) => item.slug === sub)) { $("sub").value = sub; refillSpots(); }
+      if (spot && currentSub() && currentSub().spots.some(([slug]) => slug === spot)) $("spot").value = spot;
+    }
+    function chosenPlace() {
+      const project = currentProject(); const zone = currentZone(); const sub = currentSub();
+      const spot = sub && sub.spots.find(([slug]) => slug === $("spot").value);
+      const subCustom = $("sub-custom").value.trim(); const spotCustom = $("spot-custom").value.trim();
+      return {
+        projectSlug: project ? project.slug : "", projectName: project ? project.name : "",
+        zoneSlug: zone ? zone.slug : null, zoneName: zone ? zone.name : null,
+        subLocationSlug: subCustom ? slugify(subCustom) : (sub ? sub.slug : ""),
+        subLocationName: subCustom || (sub ? sub.name : ""), subLocationCustom: Boolean(subCustom),
+        subSublocationSlug: spotCustom ? slugify(spotCustom) : (spot ? spot[0] : null),
+        subSublocationName: spotCustom || (spot ? spot[1] : null), subSublocationCustom: Boolean(spotCustom)
+      };
+    }
+    function nextLocalReference() {
+      const year = new Date().getUTCFullYear(); const key = "obs-counter-" + year;
+      const next = Number(localStorage.getItem(key) || "0") + 1;
+      localStorage.setItem(key, String(next));
+      return "OBS-" + year + "-" + String(next).padStart(6, "0");
+    }
+    function saveLocally(place, notes) {
+      const receipt = { reference: nextLocalReference(), createdAt: new Date().toISOString() };
+      const issueRow = ISSUES.find((item) => item[0] === issue);
+      const categoryRow = CATEGORIES.find((item) => item[0] === category);
+      const record = Object.assign({}, receipt, place, {
+        category: categoryRow ? categoryRow[1] : category, issue: issueRow ? issueRow[1] : issue, notes: notes,
+        latitude: geo.latitude, longitude: geo.longitude, accuracyMeters: geo.accuracy,
+        media: files.map((file) => ({ name: file.name, mime: file.type, size: file.size }))
+      });
+      const existing = JSON.parse(localStorage.getItem("obs-reports-v1") || "[]");
+      existing.push(record);
+      localStorage.setItem("obs-reports-v1", JSON.stringify(existing));
+      return receipt;
+    }
+    function client() { if (!window.supabase || !supabase.createClient) return null; return supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+    async function saveRemote(place, notes) {
+      const db = client(); if (!db) throw new Error("no client");
+      const media = [];
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        $("progress").textContent = "Uploading " + (index + 1) + " of " + files.length + "…";
+        const safe = (file.name || "upload").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80) || "upload";
+        const path = crypto.randomUUID() + "/" + safe;
+        const uploaded = await db.storage.from("observation-media").upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+        if (uploaded.error) throw uploaded.error;
+        media.push({ path: path, name: file.name, mime: file.type || "application/octet-stream", size: file.size });
+      }
+      $("progress").textContent = "Saving the observation…";
+      const issueRow = ISSUES.find((item) => item[0] === issue);
+      const categoryRow = CATEGORIES.find((item) => item[0] === category);
+      const result = await db.rpc("submit_observation", {
+        p_project_slug: place.projectSlug, p_project_name: place.projectName, p_zone_slug: place.zoneSlug, p_zone_name: place.zoneName,
+        p_sub_location_slug: place.subLocationSlug, p_sub_location_name: place.subLocationName, p_sub_location_custom: place.subLocationCustom,
+        p_sub_sublocation_slug: place.subSublocationSlug, p_sub_sublocation_name: place.subSublocationName, p_sub_sublocation_custom: place.subSublocationCustom,
+        p_category: categoryRow ? categoryRow[1] : category, p_issue: issueRow ? issueRow[1] : issue, p_notes: notes || null,
+        p_latitude: geo.latitude, p_longitude: geo.longitude, p_accuracy_meters: geo.accuracy, p_media: media
+      });
+      if (result.error) throw result.error;
+      const data = result.data || {};
+      if (!data.reference) throw new Error("no reference");
+      return { reference: data.reference, createdAt: data.created_at || new Date().toISOString() };
+    }
+    function showReceipt(receipt) {
+      $("reference").textContent = receipt.reference;
+      $("when").textContent = new Date(receipt.createdAt).toLocaleString();
+      $("form-view").classList.add("hidden");
+      $("done-view").classList.remove("hidden");
+      window.scrollTo(0, 0);
+    }
+    async function submit() {
+      showError("");
+      const place = chosenPlace();
+      const notes = $("notes").value.trim();
+      if (!files.length) return showError("Add a photo or video before submitting.");
+      if (!place.projectSlug || !place.zoneSlug) return showError("Select the project and zone.");
+      if (!place.subLocationName) return showError("Select a sub-location, or add one.");
+      if (!category || !issue) return showError("Choose a category and an issue.");
+      const button = $("submit");
+      button.disabled = true;
+      $("progress").textContent = "Submitting…";
+      try {
+        let receipt;
+        try { receipt = await saveRemote(place, notes); }
+        catch (error) { console.error(error); receipt = saveLocally(place, notes); }
+        showReceipt(receipt);
+      } catch (error) {
+        console.error(error);
+        showError("Couldn't save the observation on this device.");
+      } finally { button.disabled = false; $("progress").textContent = ""; }
+    }
+    function resetForm() {
+      files.splice(0, files.length); renderPreviews();
+      $("notes").value = ""; $("sub-custom").value = ""; $("spot-custom").value = "";
+      category = ""; issue = ""; renderCategories(); renderIssues();
+      $("project").value = ""; refillZones(); applyQuery();
+      $("done-view").classList.add("hidden"); $("form-view").classList.remove("hidden");
+      window.scrollTo(0, 0);
+      locate();
+    }
+    function setupDictate() {
+      const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const button = $("dictate"); const status = $("dictate-status"); const label = $("dictate-label");
+      if (!Speech) { button.disabled = true; status.textContent = "Voice dictation is not available in this browser."; return; }
+      const recognition = new Speech();
+      recognition.lang = navigator.language || "en";
+      recognition.interimResults = false;
+      recognition.onresult = (event) => { const notes = $("notes"); const said = event.results[0][0].transcript; notes.value = (notes.value ? notes.value.replace(/\s*$/, "") + " " : "") + said; };
+      recognition.onerror = () => { status.textContent = "Dictation stopped. You can type the note instead."; };
+      recognition.onend = () => { label.textContent = "Dictate"; status.textContent = ""; };
+      button.addEventListener("click", () => { status.textContent = "Listening…"; label.textContent = "Listening…"; recognition.start(); });
+    }
+    fillSelect($("project"), PROJECTS, "Select");
+    $("project").addEventListener("change", refillZones);
+    $("zone").addEventListener("change", refillSubs);
+    $("sub").addEventListener("change", refillSpots);
+    refillZones(); renderCategories(); renderIssues(); applyQuery(); locate(); setupDictate();
+    $("take-btn").addEventListener("click", () => $("take-input").click());
+    $("upload-btn").addEventListener("click", () => $("upload-input").click());
+    $("take-input").addEventListener("change", (event) => { addFiles(event.target.files); event.target.value = ""; });
+    $("upload-input").addEventListener("change", (event) => { addFiles(event.target.files); event.target.value = ""; });
+    $("submit").addEventListener("click", submit);
+    $("another").addEventListener("click", resetForm);
+  </script>
+</body>
+</html>
