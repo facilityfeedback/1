@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#f4efe8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14110f" media="(prefers-color-scheme: dark)">
+  <title>Report It</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4efe8;
+      --card: #fffdfb;
+      --label: #241c18;
+      --secondary: rgba(58, 42, 36, 0.62);
+      --tertiary: rgba(58, 42, 36, 0.34);
+      --separator: rgba(58, 42, 36, 0.14);
+      --accent: #8d3948;
+      --ink: #8d3948;
+      --on-accent: #ffffff;
+      --green: #2f8f4e;
+      --red: #d63c32;
+      --red-bg: rgba(214, 60, 50, 0.12);
+      --fill: rgba(88, 62, 48, 0.1);
+      --chevron: #c9bbb2;
+      --bar: rgba(244, 239, 232, 0.96);
+      --bar-blur: rgba(244, 239, 232, 0.78);
+      --pressed: rgba(88, 62, 48, 0.14);
+      --icon-bg: rgba(141, 57, 72, 0.12);
+      --hover: rgba(88, 62, 48, 0.08);
+      --page: 20px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14110f;
+        --card: #231e1b;
+        --label: #f6f0ea;
+        --secondary: rgba(246, 240, 234, 0.62);
+        --tertiary: rgba(246, 240, 234, 0.34);
+        --separator: rgba(246, 240, 234, 0.14);
+        --accent: #a84558;
+        --ink: #f0b4c0;
+        --on-accent: #ffffff;
+        --green: #3dba6c;
+        --red: #ff6b63;
+        --red-bg: rgba(255, 107, 99, 0.18);
+        --fill: rgba(246, 240, 234, 0.08);
+        --chevron: rgba(246, 240, 234, 0.32);
+        --bar: rgba(20, 17, 15, 0.96);
+        --bar-blur: rgba(20, 17, 15, 0.78);
+        --pressed: rgba(246, 240, 234, 0.08);
+        --icon-bg: rgba(240, 180, 192, 0.16);
+        --hover: rgba(246, 240, 234, 0.06);
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    html { scroll-padding-bottom: calc(128px + env(safe-area-inset-bottom)); }
+    .chip, .row, textarea, input, select { scroll-margin-bottom: calc(128px + env(safe-area-inset-bottom)); }
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.35;
+      color: var(--label);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-text-size-adjust: 100%;
+    }
+    button, input, select, textarea { font: inherit; color: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    .app {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: max(12px, env(safe-area-inset-top)) 0 calc(128px + env(safe-area-inset-bottom));
+    }
+    body:has(#form-view.hidden) .app {
+      padding-bottom: calc(28px + env(safe-area-inset-bottom));
+    }
+    .mast {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px var(--page) 6px;
+    }
+    .mast-link, .text-link {
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.022em;
+      text-decoration: none;
+    }
+    .mast-link {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      height: 34px;
+      margin-top: 8px;
+      padding: 0 14px;
+      border-radius: 999px;
+      background: var(--fill);
+    }
+    .done .text-link { display: inline-block; margin-top: 16px; font-weight: 600; }
+    .eyebrow {
+      margin: 0 0 2px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.12;
+      font-weight: 700;
+      letter-spacing: -0.022em;
+    }
+    .lede {
+      margin: 6px 0 0;
+      color: var(--secondary);
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+    section { margin-top: 28px; }
+    h2 {
+      margin: 0 var(--page) 7px;
+      padding-left: 16px;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: -0.008em;
+      text-transform: uppercase;
+    }
+    .group {
+      margin: 0 var(--page);
+      background: var(--card);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .group.rows > * + * { position: relative; }
+    .group.rows > * + *::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16px;
+      right: 0;
+      height: 1px;
+      background: var(--separator);
+      pointer-events: none;
+    }
+    .group.rows > .icon-row + .icon-row::before,
+    .group.rows > .icon-row + .previews::before { left: 58px; }
+    .row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 52px;
+      margin: 0;
+      padding: 10px 16px;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .row.static { cursor: default; }
+    .icon-wrap {
+      width: 30px;
+      height: 30px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--icon-bg);
+      color: var(--ink);
+    }
+    .icon-wrap svg { width: 18px; height: 18px; display: block; }
+    .row-title {
+      flex: 0 0 auto;
+      font-size: 17px;
+      letter-spacing: -0.022em;
+    }
+    .recorder {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 var(--page);
+      min-height: 52px;
+      padding: 8px 12px 8px 8px;
+      background: var(--card);
+      border-radius: 16px;
+    }
+    .recorder [hidden] { display: none !important; }
+    .rec-btn, .play-btn, .recorder .remove {
+      position: relative;
+      z-index: 1;
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .rec-btn:active, .play-btn:active { transform: scale(0.94); }
+    .rec-btn {
+      background: var(--accent);
+      color: var(--on-accent);
+    }
+    .recorder.is-recording .rec-btn { background: var(--red); }
+    .rec-btn svg, .play-btn svg, .recorder .remove svg { width: 18px; height: 18px; display: block; }
+    .play-btn { background: var(--accent); color: var(--on-accent); }
+    .recorder .remove { background: var(--fill); color: var(--secondary); }
+    .rec-hint {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      color: var(--secondary);
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+    .wave {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 28px;
+      min-width: 0;
+    }
+    .recorder.has-note .wave { cursor: pointer; }
+    .wave span {
+      width: 2.5px;
+      flex: 0 0 auto;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--tertiary);
+    }
+    .wave span.on { background: var(--ink); }
+    .recorder.is-recording .wave span.on { background: var(--ink); }
+    .rec-time {
+      flex: 0 0 auto;
+      min-width: 34px;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    .recorder.is-recording .rec-time { color: var(--label); }
+    #voice-player { display: none; }
+    select {
+      flex: 1 1 auto;
+      min-width: 0;
+      width: 100%;
+      margin: 0;
+      padding: 0 18px 0 12px;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: 17px;
+      text-align: right;
+      letter-spacing: -0.022em;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      text-overflow: ellipsis;
+    }
+    select:has(option[value=""]:checked) { color: var(--tertiary); }
+    .disclosure::after {
+      content: "";
+      margin-left: auto;
+      width: 7px;
+      height: 12px;
+      flex: 0 0 auto;
+      background: var(--chevron);
+      -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+      mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+    }
+    .pick::after {
+      content: "";
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      width: 7px;
+      height: 12px;
+      transform: translateY(-50%);
+      background: var(--chevron);
+      pointer-events: none;
+      -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+      mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 12'><path d='M1 1l5 5-5 5' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+    }
+    .stack {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      cursor: text;
+    }
+    .stack .row-title {
+      color: var(--secondary);
+      font-size: 13px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font-size: 17px;
+      letter-spacing: -0.022em;
+      color: var(--label);
+    }
+    input::placeholder, textarea::placeholder { color: var(--tertiary); }
+    textarea {
+      display: block;
+      min-height: 112px;
+      padding: 14px 16px 8px;
+      resize: none;
+      line-height: 1.4;
+    }
+    .note { display: block; }
+    .pad { padding: 14px 16px 16px; }
+    .inside-label {
+      margin: 14px 0 8px;
+      color: var(--secondary);
+      font-size: 13px;
+    }
+    .inside-label:first-child { margin-top: 0; }
+    .choice-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      border: 0;
+      background: var(--fill);
+      color: var(--label);
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 10px 12px;
+      font-size: 16px;
+      font-weight: 590;
+      letter-spacing: -0.02em;
+      cursor: pointer;
+    }
+    .choice-grid .chip { width: 100%; line-height: 1.15; text-wrap: balance; }
+    .chips .chip {
+      min-height: 36px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .chip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+    .previews:empty { display: none; }
+    .previews {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 14px 16px;
+      scrollbar-width: none;
+    }
+    .previews::-webkit-scrollbar { display: none; }
+    .shot {
+      position: relative;
+      width: 84px;
+      height: 84px;
+      flex: 0 0 auto;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--fill);
+    }
+    .shot img, .shot video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .shot button {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      font-size: 15px;
+      line-height: 22px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+    }
+    .footnote {
+      margin: 7px var(--page) 0;
+      padding: 0 16px;
+      color: var(--secondary);
+      font-size: 13px;
+      line-height: 1.35;
+      letter-spacing: -0.006em;
+    }
+    .footnote:empty { display: none; }
+    .banner {
+      margin: 16px var(--page) 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--red-bg);
+      color: var(--red);
+      font-size: 15px;
+      letter-spacing: -0.01em;
+    }
+    .submit-bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 5;
+      padding: 12px var(--page) calc(12px + env(safe-area-inset-bottom));
+      background: var(--bar);
+      border-top: 1px solid var(--separator);
+    }
+    @supports ((backdrop-filter: blur(16px)) or (-webkit-backdrop-filter: blur(16px))) {
+      .submit-bar {
+        background: var(--bar-blur);
+        backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+      }
+    }
+    body:has(#form-view.hidden) .submit-bar { display: none; }
+    .submit-inner { max-width: 640px; margin: 0 auto; }
+    button.primary {
+      display: block;
+      width: 100%;
+      height: 54px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -0.022em;
+      cursor: pointer;
+    }
+    button.primary:disabled { opacity: 0.45; cursor: wait; }
+    #progress { text-align: center; margin-top: 8px; padding: 0; }
+    .hidden { display: none !important; }
+    .done {
+      padding: 48px var(--page) 0;
+      text-align: center;
+    }
+    .mark {
+      width: 76px;
+      height: 76px;
+      margin: 12px auto 18px;
+      color: var(--green);
+    }
+    .done h1 { font-size: 28px; }
+    .done .lede { margin-bottom: 22px; }
+    .receipt { padding: 18px 16px 16px; }
+    .receipt .inside-label { margin: 0 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .ref {
+      margin: 0;
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      font-variant-numeric: tabular-nums;
+    }
+    .receipt .footnote { margin: 6px 0 0; padding: 0; }
+    .done .primary { margin-top: 22px; }
+    button:disabled.row { opacity: 0.4; cursor: default; }
+    @media (hover: hover) {
+      .row:not(.static):hover { background: var(--hover); }
+      .chip:hover { filter: brightness(0.98); }
+      button.primary:hover { filter: brightness(1.06); }
+    }
+    .row:not(.static):active { background: var(--pressed); }
+    .chip:active { transform: scale(0.98); }
+    button.primary:active:not(:disabled) { opacity: 0.72; }
+    select:focus, select:focus-visible { outline: none; }
+    .row:focus-visible, .chip:focus-visible, button.primary:focus-visible, input:focus-visible, textarea:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: -2px;
+    }
+    button.primary:focus-visible { outline-offset: 3px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .done:not(.hidden) .mark { animation: pop 0.55s cubic-bezier(0.2, 0.9, 0.3, 1.15); }
+    }
+    @keyframes pop {
+      from { opacity: 0; transform: scale(0.6); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <main id="form-view">
+    <header class="mast">
+      <div>
+        <p class="eyebrow">Report It</p>
+        <h1>New Observation</h1>
+      </div>
+      <a class="mast-link" href="reportit-admin.html">Tickets</a>
+    </header>
+    <p id="error" class="banner hidden" role="alert"></p>
+      <section>
+        <h2>Photo or Video</h2>
+        <div class="group rows">
+          <button class="row icon-row disclosure" type="button" id="take-btn">
+            <span class="icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                <path d="M8.2 7.2 9.4 5.5h5.2l1.2 1.7H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9.2a2 2 0 0 1 2-2h3.2Z"/>
+                <circle cx="12" cy="13.2" r="3.1"/>
+              </svg>
+            </span>
+            <span class="row-title">Take Photo or Video</span>
+          </button>
+          <button class="row icon-row disclosure" type="button" id="upload-btn">
+            <span class="icon-wrap" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3.5" y="5" width="13" height="13" rx="2.2"/>
+                <path d="M8.5 18.5h10a2.2 2.2 0 0 0 2.2-2.2V7.2"/>
+              </svg>
+            </span>
+            <span class="row-title">Choose from Library</span>
+          </button>
+          <input id="take-input" class="hidden" type="file" accept="image/*,video/*" capture="environment">
+          <input id="upload-input" class="hidden" type="file" accept="image/*,video/*" multiple>
+          <div id="previews" class="previews"></div>
+        </div>
+        <p id="media-hint" class="footnote">Add at least one photo or video.</p>
+      </section>
+      <section>
+        <h2>Location</h2>
+        <div class="group rows">
+          <label class="row pick">
+            <span class="row-title">Project</span>
+            <select id="project"></select>
+          </label>
+          <label class="row stack">
+            <span class="row-title">Sub-location</span>
+            <input id="sub-location" type="text" placeholder="Optional" autocomplete="off">
+          </label>
+        </div>
+        <p id="geo" class="footnote">Finding this device…</p>
+      </section>
+      <section>
+        <h2>Issue</h2>
+        <div class="group pad">
+          <p class="inside-label">What did you notice?</p>
+          <div id="issues" class="chips"></div>
+          <p class="inside-label">Category</p>
+          <div id="categories" class="choice-grid"></div>
+          <p class="inside-label">Status</p>
+          <div id="statuses" class="chips"></div>
+        </div>
+      </section>
+      <section>
+        <h2>Note</h2>
+        <div class="group rows">
+          <label class="note">
+            <span class="hidden">Optional note</span>
+            <textarea id="notes" placeholder="What should someone know?"></textarea>
+          </label>
+        </div>
+      </section>
+      <section>
+        <h2>Voice note</h2>
+        <div class="recorder" id="voice-card">
+          <button type="button" id="voice" class="rec-btn" aria-label="Record voice note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+              <rect x="9" y="3" width="6" height="11" rx="3"/>
+              <path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.2M8.5 20.2h7"/>
+            </svg>
+          </button>
+          <button type="button" id="voice-play" class="play-btn" hidden aria-label="Play voice note">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>
+          </button>
+          <p class="rec-hint" id="voice-status">Tap to record</p>
+          <div class="wave" id="voice-wave" hidden aria-hidden="true"></div>
+          <span class="rec-time" id="voice-time">0:00</span>
+          <button type="button" id="voice-remove" class="remove" hidden aria-label="Remove voice note">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 7h12M9 7V5.5h6V7M8 7l.8 12h6.4L16 7"/></svg>
+          </button>
+          <audio id="voice-player" preload="metadata"></audio>
+        </div>
+      </section>
+    </main>
+    <main id="done-view" class="done hidden">
+      <svg class="mark" viewBox="0 0 76 76" aria-hidden="true">
+        <circle cx="38" cy="38" r="38" fill="currentColor"/>
+        <path d="M22 39.5 33 50.5 55 27" fill="none" stroke="#fff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1>Submitted</h1>
+      <p class="lede">Thank you. Your observation has been submitted successfully.</p>
+      <div class="group receipt">
+        <p class="inside-label">Reference</p>
+        <p id="reference" class="ref"></p>
+        <p id="when" class="footnote"></p>
+        <p id="filed-status" class="footnote"></p>
+      </div>
+      <button class="primary" type="button" id="another">File Another Observation</button>
+      <a class="text-link" href="reportit-admin.html">View tickets</a>
+    </main>
+  </div>
+  <div class="submit-bar">
+    <div class="submit-inner">
+      <button class="primary" type="button" id="submit">Submit Observation</button>
+      <p id="progress" class="footnote" aria-live="polite"></p>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = "https://hhxbcnistdyrwrjuxkzf.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_fXFDEnf0m642GEyvAcH5bQ_CTOKljc5";
+    const PROJECTS = [
+      "AMAALA HOSPITAL",
+      "AMAALA Staff VILLAGE",
+      "Daraah Resort",
+      "Four Seasons",
+      "Jayasom",
+      "Corallium",
+      "Equinox Resort",
+      "Nammos Resort",
+      "Yacht Club",
+      "Six Senses",
+      "Rosewood"
+    ].map((name) => ({
+      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""),
+      name
+    }));
+    const CATEGORIES = [["safety","Safety"],["quality","Quality"],["housekeeping","Housekeeping"],["poor-workmanship","Poor workmanship"]];
+    const ISSUES = [["leak","Leak","quality"],["crack-or-damage","Crack or damage","quality"],["obstruction","Obstruction","safety"],["electrical","Electrical","safety"],["mechanical","Mechanical","quality"],["debris","Debris","housekeeping"],["incomplete-work","Incomplete work","quality"],["other","Other",null]];
+    const files = [];
+    let voiceNote = null;
+    let voiceUrl = "";
+    let recorder = null;
+    let voiceReady = Promise.resolve();
+    const WAVE_BARS = 48;
+    let waveLevels = new Array(WAVE_BARS).fill(0);
+    let waveProgress = 0;
+    let waveGeneration = 0;
+    let levelTimer = 0;
+    let meterCtx = null;
+    const micIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6.5 11.5a5.5 5.5 0 0 0 11 0M12 17v3.2M8.5 20.2h7"/></svg>';
+    const stopIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="7" y="7" width="10" height="10" rx="2"/></svg>';
+    const playIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13l11-6.5L8 5.5Z"/></svg>';
+    const pauseIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+    const geo = { latitude: null, longitude: null, accuracy: null };
+    const STATUSES = ["New", "In Review", "Closed"];
+    let category = "";
+    let issue = "";
+    let ticketStatus = "New";
+    const $ = (id) => document.getElementById(id);
+    function slugify(value) { return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "custom"; }
+    function fillSelect(select, items, placeholder) {
+      select.innerHTML = "";
+      const empty = document.createElement("option");
+      empty.value = "";
+      empty.textContent = placeholder;
+      select.appendChild(empty);
+      items.forEach((item) => {
+        const option = document.createElement("option");
+        option.value = item.slug;
+        option.textContent = item.name;
+        select.appendChild(option);
+      });
+    }
+    function currentProject() { return PROJECTS.find((item) => item.slug === $("project").value) || null; }
+    function renderChips(container, items, selected, onPick) {
+      container.innerHTML = "";
+      items.forEach(([id, label]) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "chip";
+        button.textContent = label;
+        button.setAttribute("aria-pressed", selected === id ? "true" : "false");
+        button.addEventListener("click", () => onPick(id));
+        container.appendChild(button);
+      });
+    }
+    function renderCategories() { renderChips($("categories"), CATEGORIES, category, (id) => { category = id; renderCategories(); }); }
+    function renderIssues() { renderChips($("issues"), ISSUES, issue, (id) => { issue = id; const match = ISSUES.find((item) => item[0] === id); if (match && match[2]) category = match[2]; renderIssues(); renderCategories(); }); }
+    function renderStatuses() {
+      const box = $("statuses");
+      box.innerHTML = "";
+      STATUSES.forEach((name) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "chip";
+        button.textContent = name;
+        button.setAttribute("aria-pressed", ticketStatus === name ? "true" : "false");
+        button.addEventListener("click", () => { ticketStatus = name; renderStatuses(); });
+        box.appendChild(button);
+      });
+    }
+    function showError(message) { const box = $("error"); if (!message) { box.classList.add("hidden"); box.textContent = ""; return; } box.textContent = message; box.classList.remove("hidden"); box.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    function renderPreviews() {
+      const wrap = $("previews");
+      wrap.innerHTML = "";
+      files.forEach((file, index) => {
+        const shot = document.createElement("div");
+        shot.className = "shot";
+        const url = URL.createObjectURL(file);
+        const media = file.type.startsWith("video/") ? document.createElement("video") : document.createElement("img");
+        media.src = url;
+        if (media.tagName === "VIDEO") media.muted = true;
+        shot.appendChild(media);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = "×";
+        remove.setAttribute("aria-label", "Remove");
+        remove.addEventListener("click", () => { URL.revokeObjectURL(url); files.splice(index, 1); renderPreviews(); });
+        shot.appendChild(remove);
+        wrap.appendChild(shot);
+      });
+      $("media-hint").textContent = files.length ? (files.length === 1 ? "1 photo or video added." : files.length + " photos or videos added.") : "Add at least one photo or video.";
+    }
+    function addFiles(list) { Array.from(list || []).forEach((file) => files.push(file)); renderPreviews(); showError(""); }
+    function attachments() { return voiceNote ? files.concat([voiceNote]) : files.slice(); }
+    function clock(seconds) {
+      const safe = Math.max(0, Math.floor(seconds || 0));
+      return Math.floor(safe / 60) + ":" + String(safe % 60).padStart(2, "0");
+    }
+    function paintWave() {
+      const bars = $("voice-wave").children;
+      const recording = $("voice-card").classList.contains("is-recording");
+      for (let i = 0; i < bars.length; i++) {
+        const level = waveLevels[i] || 0;
+        bars[i].style.height = (4 + Math.round(level * 24)) + "px";
+        const played = recording ? level > 0.08 : waveProgress > 0 && (i + 0.5) / bars.length <= waveProgress;
+        bars[i].classList.toggle("on", played);
+      }
+    }
+    function stopMeter() {
+      clearInterval(levelTimer);
+      levelTimer = 0;
+      if (meterCtx) {
+        meterCtx.close().catch(() => {});
+        meterCtx = null;
+      }
+    }
+    function startMeter(stream) {
+      stopMeter();
+      waveLevels = new Array(WAVE_BARS).fill(0);
+      waveProgress = 0;
+      paintWave();
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      meterCtx = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.35;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.fftSize);
+      if (ctx.state === "suspended") ctx.resume();
+      levelTimer = setInterval(() => {
+        analyser.getByteTimeDomainData(data);
+        let sum = 0;
+        for (let i = 0; i < data.length; i++) {
+          const v = (data[i] - 128) / 128;
+          sum += v * v;
+        }
+        const level = Math.min(1, Math.pow(Math.sqrt(sum / data.length) * 5, 0.8));
+        waveLevels.push(level);
+        if (waveLevels.length > WAVE_BARS) waveLevels.shift();
+        paintWave();
+      }, 80);
+    }
+    function encodeWav(audio) {
+      const channels = audio.numberOfChannels;
+      const rate = audio.sampleRate;
+      const length = audio.length;
+      const block = channels * 2;
+      const dataSize = length * block;
+      const bytes = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(bytes);
+      const write = (offset, text) => { for (let i = 0; i < text.length; i++) view.setUint8(offset + i, text.charCodeAt(i)); };
+      write(0, "RIFF");
+      view.setUint32(4, 36 + dataSize, true);
+      write(8, "WAVE");
+      write(12, "fmt ");
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, channels, true);
+      view.setUint32(24, rate, true);
+      view.setUint32(28, rate * block, true);
+      view.setUint16(32, block, true);
+      view.setUint16(34, 16, true);
+      write(36, "data");
+      view.setUint32(40, dataSize, true);
+      const tracks = [];
+      for (let c = 0; c < channels; c++) tracks.push(audio.getChannelData(c));
+      let offset = 44;
+      for (let i = 0; i < length; i++) {
+        for (let c = 0; c < channels; c++) {
+          const sample = Math.max(-1, Math.min(1, tracks[c][i]));
+          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7fff, true);
+          offset += 2;
+        }
+      }
+      return new File([bytes], "voice-note.wav", { type: "audio/wav" });
+    }
+    function trimUnspoken(file) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return Promise.resolve(file);
+      const ctx = new Ctx();
+      const work = Promise.resolve(ctx.resume && ctx.resume()).catch(() => {}).then(() => file.arrayBuffer()).then((bytes) => ctx.decodeAudioData(bytes.slice(0))).then((buffer) => {
+        const rate = buffer.sampleRate;
+        const channels = buffer.numberOfChannels;
+        const length = buffer.length;
+        const frame = Math.max(1, Math.floor(rate * 0.02));
+        const count = Math.ceil(length / frame);
+        const loud = new Float32Array(count);
+        for (let i = 0; i < count; i++) {
+          const start = i * frame;
+          const end = Math.min(length, start + frame);
+          let sum = 0;
+          for (let j = start; j < end; j += 2) {
+            let sample = 0;
+            for (let c = 0; c < channels; c++) sample += buffer.getChannelData(c)[j];
+            sample /= channels;
+            sum += sample * sample;
+          }
+          loud[i] = Math.sqrt(sum / Math.max(1, Math.ceil((end - start) / 2)));
+        }
+        const sorted = Array.from(loud).sort((a, b) => a - b);
+        const quiet = sorted[Math.floor(sorted.length * 0.1)] || 0;
+        const mid = sorted[Math.floor(sorted.length * 0.5)] || quiet;
+        const gate = Math.min(Math.max(0.012, quiet * 3), Math.max(0.012, mid * 0.45));
+        const spoken = Array.from(loud, (level) => level >= gate);
+        const minFrames = 4;
+        let run = 0;
+        const dropRun = (end) => { for (let k = end - run; k < end; k++) spoken[k] = false; };
+        for (let i = 0; i < count; i++) {
+          if (spoken[i]) run += 1;
+          else if (run) { if (run < minFrames) dropRun(i); run = 0; }
+        }
+        if (run && run < minFrames) dropRun(count);
+        const kept = spoken.slice();
+        for (let i = 0; i < count; i++) {
+          if (!spoken[i]) continue;
+          for (let k = Math.max(0, i - 2); k <= Math.min(count - 1, i + 2); k++) kept[k] = true;
+        }
+        const ranges = [];
+        let start = -1;
+        for (let i = 0; i <= count; i++) {
+          const on = i < count && kept[i];
+          if (on && start < 0) start = i * frame;
+          if (!on && start >= 0) {
+            const end = Math.min(length, i * frame);
+            if (end > start) ranges.push([start, end]);
+            start = -1;
+          }
+        }
+        let total = 0;
+        ranges.forEach(([from, to]) => { total += to - from; });
+        if (total < rate * 0.2) return null;
+        const trimmed = ctx.createBuffer(channels, total, rate);
+        const fade = Math.min(Math.floor(rate * 0.012), Math.floor(total / 4));
+        let write = 0;
+        ranges.forEach(([from, to]) => {
+          const span = to - from;
+          for (let c = 0; c < channels; c++) {
+            const src = buffer.getChannelData(c);
+            const dst = trimmed.getChannelData(c);
+            for (let i = 0; i < span; i++) {
+              let gain = 1;
+              if (fade > 0 && i < fade) gain = i / fade;
+              if (fade > 0 && span - 1 - i < fade) gain = Math.min(gain, (span - 1 - i) / fade);
+              dst[write + i] = src[from + i] * gain;
+            }
+          }
+          write += span;
+        });
+        return encodeWav(trimmed);
+      }).catch(() => file).finally(() => ctx.close());
+      return Promise.race([work, new Promise((resolve) => setTimeout(() => resolve(file), 4000))]);
+    }
+    function peaksFrom(file) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return Promise.resolve(null);
+      const ctx = new Ctx();
+      return file.arrayBuffer().then((bytes) => ctx.decodeAudioData(bytes)).then((buffer) => {
+        const channel = buffer.getChannelData(0);
+        const block = Math.max(1, Math.floor(channel.length / WAVE_BARS));
+        const peaks = [];
+        let loudest = 0.01;
+        for (let i = 0; i < WAVE_BARS; i++) {
+          let max = 0;
+          const start = i * block;
+          const end = Math.min(channel.length, start + block);
+          for (let j = start; j < end; j += 12) {
+            const v = Math.abs(channel[j]);
+            if (v > max) max = v;
+          }
+          peaks.push(max);
+          if (max > loudest) loudest = max;
+        }
+        return peaks.map((v) => Math.min(1, Math.pow(v / loudest, 0.65)));
+      }).catch(() => null).finally(() => ctx.close());
+    }
+    function showVoice(mode) {
+      const card = $("voice-card");
+      card.classList.toggle("is-recording", mode === "recording");
+      card.classList.toggle("has-note", mode === "ready");
+      $("voice").hidden = mode === "ready";
+      $("voice-play").hidden = mode !== "ready";
+      $("voice-remove").hidden = mode !== "ready";
+      $("voice-status").hidden = mode !== "idle";
+      $("voice-wave").hidden = mode === "idle";
+    }
+    function clearVoice() {
+      waveGeneration += 1;
+      if (voiceUrl) URL.revokeObjectURL(voiceUrl);
+      voiceNote = null;
+      voiceUrl = "";
+      stopMeter();
+      const player = $("voice-player");
+      player.pause();
+      player.removeAttribute("src");
+      player.load();
+      const play = $("voice-play");
+      play.innerHTML = playIcon;
+      play.setAttribute("aria-label", "Play voice note");
+      $("voice").innerHTML = micIcon;
+      $("voice").setAttribute("aria-label", "Record voice note");
+      $("voice-status").textContent = "Tap to record";
+      $("voice-time").textContent = "0:00";
+      waveLevels = new Array(WAVE_BARS).fill(0);
+      waveProgress = 0;
+      showVoice("idle");
+      paintWave();
+    }
+    function locate() {
+      const line = $("geo");
+      if (!navigator.geolocation) { line.textContent = "Location is unavailable in this browser. You can still pick the project."; return; }
+      line.textContent = "Finding this device…";
+      navigator.geolocation.getCurrentPosition((position) => {
+        geo.latitude = position.coords.latitude; geo.longitude = position.coords.longitude; geo.accuracy = Math.round(position.coords.accuracy);
+        line.textContent = "Location picked up (" + geo.latitude.toFixed(5) + ", " + geo.longitude.toFixed(5) + ", about " + geo.accuracy + " m).";
+      }, () => { line.textContent = "Location permission was denied or is unavailable. Pick the project instead."; }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
+    }
+    function applyQuery() {
+      const params = new URLSearchParams(location.search);
+      const project = params.get("project");
+      const sub = params.get("sub");
+      if (project && PROJECTS.some((item) => item.slug === project)) $("project").value = project;
+      if (sub) $("sub-location").value = sub;
+    }
+    function chosenPlace() {
+      const project = currentProject();
+      const sub = $("sub-location").value.trim();
+      return {
+        projectSlug: project ? project.slug : "", projectName: project ? project.name : "",
+        zoneSlug: null, zoneName: null,
+        subLocationSlug: sub ? slugify(sub) : null,
+        subLocationName: sub || null, subLocationCustom: Boolean(sub),
+        subSublocationSlug: null, subSublocationName: null, subSublocationCustom: false
+      };
+    }
+    function archive(record) {
+      const existing = JSON.parse(localStorage.getItem("obs-reports-v1") || "[]");
+      const index = existing.findIndex((item) => item.reference === record.reference);
+      if (index >= 0) existing[index] = Object.assign({}, existing[index], record);
+      else existing.push(record);
+      try {
+        localStorage.setItem("obs-reports-v1", JSON.stringify(existing));
+      } catch (error) {
+        const slim = Object.assign({}, record, {
+          media: (record.media || []).map((item) => {
+            const copy = Object.assign({}, item);
+            delete copy.preview;
+            return copy;
+          })
+        });
+        if (index >= 0) existing[index] = Object.assign({}, existing[index], slim);
+        else existing[existing.length - 1] = slim;
+        localStorage.setItem("obs-reports-v1", JSON.stringify(existing));
+      }
+    }
+    function previewOf(file) {
+      return new Promise((resolve) => {
+        if (!file || !file.type || !file.type.startsWith("image/")) { resolve(""); return; }
+        const url = URL.createObjectURL(file);
+        const image = new Image();
+        image.onload = () => {
+          const max = 960;
+          const scale = Math.min(1, max / Math.max(image.width, image.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          resolve(canvas.toDataURL("image/jpeg", 0.72));
+        };
+        image.onerror = () => { URL.revokeObjectURL(url); resolve(""); };
+        image.src = url;
+      });
+    }
+    function nextLocalReference() {
+      const year = new Date().getUTCFullYear(); const key = "obs-counter-" + year;
+      const next = Number(localStorage.getItem(key) || "0") + 1;
+      localStorage.setItem(key, String(next));
+      return "OBS-" + year + "-" + String(next).padStart(6, "0");
+    }
+    async function saveLocally(place, notes) {
+      const receipt = { reference: nextLocalReference(), createdAt: new Date().toISOString() };
+      const issueRow = ISSUES.find((item) => item[0] === issue);
+      const categoryRow = CATEGORIES.find((item) => item[0] === category);
+      const media = [];
+      for (const file of attachments()) {
+        const preview = await previewOf(file);
+        const item = { name: file.name, mime: file.type, size: file.size };
+        if (preview) item.preview = preview;
+        media.push(item);
+      }
+      const record = Object.assign({}, receipt, place, {
+        category: categoryRow ? categoryRow[1] : category, issue: issueRow ? issueRow[1] : issue, notes: notes, status: ticketStatus,
+        latitude: geo.latitude, longitude: geo.longitude, accuracyMeters: geo.accuracy,
+        media: media
+      });
+      archive(record);
+      return receipt;
+    }
+    function client() { if (!window.supabase || !supabase.createClient) return null; return supabase.createClient(SUPABASE_URL, SUPABASE_KEY); }
+    async function saveRemote(place, notes) {
+      const db = client(); if (!db) throw new Error("no client");
+      const media = [];
+      const uploads = attachments();
+      for (let index = 0; index < uploads.length; index += 1) {
+        const file = uploads[index];
+        $("progress").textContent = "Uploading " + (index + 1) + " of " + uploads.length + "…";
+        const safe = (file.name || "upload").replace(/[^a-zA-Z0-9._-]+/g, "-").slice(-80) || "upload";
+        const path = crypto.randomUUID() + "/" + safe;
+        const uploaded = await db.storage.from("observation-media").upload(path, file, { contentType: file.type || "application/octet-stream", upsert: false });
+        if (uploaded.error) throw uploaded.error;
+        const preview = await previewOf(file);
+        const item = { path: path, name: file.name, mime: file.type || "application/octet-stream", size: file.size };
+        if (preview) item.preview = preview;
+        media.push(item);
+      }
+      $("progress").textContent = "Saving the observation…";
+      const issueRow = ISSUES.find((item) => item[0] === issue);
+      const categoryRow = CATEGORIES.find((item) => item[0] === category);
+      const result = await db.rpc("submit_observation", {
+        p_project_slug: place.projectSlug, p_project_name: place.projectName, p_zone_slug: place.zoneSlug, p_zone_name: place.zoneName,
+        p_sub_location_slug: place.subLocationSlug, p_sub_location_name: place.subLocationName, p_sub_location_custom: place.subLocationCustom,
+        p_sub_sublocation_slug: place.subSublocationSlug, p_sub_sublocation_name: place.subSublocationName, p_sub_sublocation_custom: place.subSublocationCustom,
+        p_category: categoryRow ? categoryRow[1] : category, p_issue: issueRow ? issueRow[1] : issue, p_notes: notes || null,
+        p_latitude: geo.latitude, p_longitude: geo.longitude, p_accuracy_meters: geo.accuracy, p_media: media
+      });
+      if (result.error) throw result.error;
+      const data = result.data || {};
+      if (!data.reference) throw new Error("no reference");
+      const receipt = { reference: data.reference, createdAt: data.created_at || new Date().toISOString() };
+      archive(Object.assign({}, receipt, place, {
+        category: categoryRow ? categoryRow[1] : category, issue: issueRow ? issueRow[1] : issue, notes: notes, status: ticketStatus,
+        latitude: geo.latitude, longitude: geo.longitude, accuracyMeters: geo.accuracy, media: media
+      }));
+      return receipt;
+    }
+    function showReceipt(receipt) {
+      $("reference").textContent = receipt.reference;
+      $("when").textContent = new Date(receipt.createdAt).toLocaleString();
+      $("filed-status").textContent = "Status · " + ticketStatus;
+      $("form-view").classList.add("hidden");
+      $("done-view").classList.remove("hidden");
+      window.scrollTo(0, 0);
+    }
+    function finishRecording() {
+      if (recorder && recorder.state === "recording") {
+        const pending = voiceReady;
+        return new Promise((resolve) => {
+          recorder.addEventListener("stop", () => pending.then(resolve), { once: true });
+          recorder.stop();
+        });
+      }
+      return voiceReady;
+    }
+    async function submit() {
+      showError("");
+      await finishRecording();
+      const place = chosenPlace();
+      const notes = $("notes").value.trim();
+      if (!files.length) return showError("Add a photo or video before submitting.");
+      if (!place.projectSlug) return showError("Select the project.");
+      if (!category || !issue) return showError("Choose a category and an issue.");
+      const button = $("submit");
+      button.disabled = true;
+      $("progress").textContent = "Submitting…";
+      try {
+        let receipt;
+        try { receipt = await saveRemote(place, notes); }
+        catch (error) { console.error(error); receipt = await saveLocally(place, notes); }
+        showReceipt(receipt);
+      } catch (error) {
+        console.error(error);
+        showError("Couldn't save the observation on this device.");
+      } finally { button.disabled = false; $("progress").textContent = ""; }
+    }
+    function resetForm() {
+      files.splice(0, files.length); renderPreviews(); clearVoice();
+      $("notes").value = ""; $("sub-location").value = "";
+      category = ""; issue = ""; ticketStatus = "New"; renderCategories(); renderIssues(); renderStatuses();
+      $("project").value = ""; applyQuery();
+      $("done-view").classList.add("hidden"); $("form-view").classList.remove("hidden");
+      window.scrollTo(0, 0);
+      locate();
+    }
+    function setupVoice() {
+      const button = $("voice");
+      const player = $("voice-player");
+      const play = $("voice-play");
+      const wave = $("voice-wave");
+      let recordTimer = 0;
+      for (let i = 0; i < WAVE_BARS; i++) wave.appendChild(document.createElement("span"));
+      paintWave();
+      if (!navigator.mediaDevices || !window.MediaRecorder) {
+        button.disabled = true;
+        $("voice-status").textContent = "Voice notes are not available in this browser.";
+        return;
+      }
+      player.playsInline = true;
+      player.setAttribute("playsinline", "");
+      function showPlaybackTime() {
+        const dur = player.duration;
+        if (!dur || !isFinite(dur)) return;
+        const t = player.currentTime || 0;
+        $("voice-time").textContent = clock(player.paused && t < 0.25 ? dur : t);
+      }
+      $("voice-remove").addEventListener("click", () => { if (!recorder) clearVoice(); });
+      play.addEventListener("click", () => {
+        if (!player.src) return;
+        if (player.paused) { player.play(); play.innerHTML = pauseIcon; play.setAttribute("aria-label", "Pause voice note"); }
+        else { player.pause(); play.innerHTML = playIcon; play.setAttribute("aria-label", "Play voice note"); }
+      });
+      wave.addEventListener("click", (event) => {
+        if (!$("voice-card").classList.contains("has-note") || !player.duration) return;
+        const rect = wave.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+        player.currentTime = ratio * player.duration;
+        waveProgress = ratio;
+        paintWave();
+        showPlaybackTime();
+      });
+      player.addEventListener("timeupdate", () => {
+        if (player.ended) return;
+        const dur = player.duration || 0;
+        if (!dur) return;
+        waveProgress = player.currentTime / dur;
+        paintWave();
+        showPlaybackTime();
+      });
+      player.addEventListener("loadedmetadata", showPlaybackTime);
+      player.addEventListener("ended", () => {
+        play.innerHTML = playIcon;
+        play.setAttribute("aria-label", "Play voice note");
+        waveProgress = 0;
+        paintWave();
+        $("voice-time").textContent = clock(player.duration);
+      });
+      let arming = null;
+      button.addEventListener("click", async () => {
+        if (recorder && recorder.state === "recording") { recorder.stop(); return; }
+        if (arming) {
+          arming.cancelled = true;
+          arming = null;
+          showVoice("idle");
+          button.innerHTML = micIcon;
+          button.setAttribute("aria-label", "Record voice note");
+          return;
+        }
+        const session = { cancelled: false };
+        arming = session;
+        showVoice("recording");
+        button.innerHTML = stopIcon;
+        button.setAttribute("aria-label", "Stop recording");
+        $("voice-time").textContent = "0:00";
+        let stream;
+        try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+        catch (error) {
+          if (arming === session) arming = null;
+          showVoice("idle");
+          button.innerHTML = micIcon;
+          button.setAttribute("aria-label", "Record voice note");
+          showError("Microphone permission was denied. You can type the note instead.");
+          return;
+        }
+        if (session.cancelled) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
+        arming = null;
+        const mime = ["audio/mp4", "audio/aac", "audio/webm"].find((type) => MediaRecorder.isTypeSupported(type)) || "";
+        recorder = mime ? new MediaRecorder(stream, { mimeType: mime }) : new MediaRecorder(stream);
+        const chunks = [];
+        const started = Date.now();
+        const generation = waveGeneration;
+        let finishTrim = () => {};
+        voiceReady = new Promise((resolve) => { finishTrim = resolve; });
+        recorder.ondataavailable = (event) => { if (event.data && event.data.size) chunks.push(event.data); };
+        recorder.onstop = async () => {
+          stream.getTracks().forEach((track) => track.stop());
+          clearInterval(recordTimer);
+          stopMeter();
+          const type = recorder.mimeType || mime || "audio/mp4";
+          const ext = type.includes("webm") ? "webm" : "m4a";
+          recorder = null;
+          button.innerHTML = micIcon;
+          button.setAttribute("aria-label", "Record voice note");
+          showVoice("idle");
+          $("voice-status").hidden = false;
+          $("voice-status").textContent = "Trimming silence…";
+          try {
+            const raw = new File(chunks, "voice-note." + ext, { type: type });
+            let note = raw;
+            try { note = await trimUnspoken(raw); } catch (error) { note = raw; }
+            if (generation !== waveGeneration) return;
+            if (!note) {
+              clearVoice();
+              $("voice-status").textContent = "Nothing was spoken.";
+              return;
+            }
+            if (voiceUrl) URL.revokeObjectURL(voiceUrl);
+            voiceNote = note;
+            voiceUrl = URL.createObjectURL(note);
+            player.src = voiceUrl;
+            play.innerHTML = playIcon;
+            play.setAttribute("aria-label", "Play voice note");
+            showVoice("ready");
+            waveProgress = 0;
+            paintWave();
+            peaksFrom(note).then((peaks) => {
+              if (generation !== waveGeneration || voiceNote !== note) return;
+              if (peaks) waveLevels = peaks;
+              paintWave();
+            });
+          } finally {
+            finishTrim();
+          }
+        };
+        player.pause();
+        showError("");
+        try { recorder.start(); }
+        catch (error) {
+          stream.getTracks().forEach((track) => track.stop());
+          recorder = null;
+          finishTrim();
+          showVoice("idle");
+          button.innerHTML = micIcon;
+          button.setAttribute("aria-label", "Record voice note");
+          return;
+        }
+        startMeter(stream);
+        recordTimer = setInterval(() => { $("voice-time").textContent = clock((Date.now() - started) / 1000); }, 250);
+      });
+    }
+    fillSelect($("project"), PROJECTS, "Select");
+    renderCategories(); renderIssues(); renderStatuses(); applyQuery(); locate(); setupVoice();
+    $("take-btn").addEventListener("click", () => $("take-input").click());
+    $("upload-btn").addEventListener("click", () => $("upload-input").click());
+    $("take-input").addEventListener("change", (event) => { addFiles(event.target.files); event.target.value = ""; });
+    $("upload-input").addEventListener("change", (event) => { addFiles(event.target.files); event.target.value = ""; });
+    $("submit").addEventListener("click", submit);
+    $("another").addEventListener("click", resetForm);
+  </script>
+</body>
+</html>
