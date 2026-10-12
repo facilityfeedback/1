@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4efe8" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#14110f" media="(prefers-color-scheme: dark)">
+  <title>Tickets · Report It</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f4efe8;
+      --card: #fffdfb;
+      --label: #241c18;
+      --secondary: rgba(58, 42, 36, 0.62);
+      --tertiary: rgba(58, 42, 36, 0.34);
+      --separator: rgba(58, 42, 36, 0.14);
+      --accent: #8d3948;
+      --ink: #8d3948;
+      --on-accent: #ffffff;
+      --tint: rgba(141, 57, 72, 0.12);
+      --green: #2f8f4e;
+      --green-bg: rgba(47, 143, 78, 0.14);
+      --orange: #c47a12;
+      --orange-bg: rgba(196, 122, 18, 0.16);
+      --red: #d63c32;
+      --red-bg: rgba(214, 60, 50, 0.12);
+      --purple: #8a4e86;
+      --purple-bg: rgba(138, 78, 134, 0.14);
+      --work: #3e5f7a;
+      --work-bg: rgba(62, 95, 122, 0.14);
+      --fill: rgba(88, 62, 48, 0.1);
+      --hover: rgba(88, 62, 48, 0.08);
+      --pressed: rgba(88, 62, 48, 0.14);
+      --selected: rgba(141, 57, 72, 0.12);
+      --page: 20px;
+      --segment-on: #fffdfb;
+      --radius: 16px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #14110f;
+        --card: #231e1b;
+        --label: #f6f0ea;
+        --secondary: rgba(246, 240, 234, 0.62);
+        --tertiary: rgba(246, 240, 234, 0.34);
+        --separator: rgba(246, 240, 234, 0.14);
+        --accent: #a84558;
+        --ink: #f0b4c0;
+        --on-accent: #ffffff;
+        --tint: rgba(240, 180, 192, 0.16);
+        --green: #3dba6c;
+        --green-bg: rgba(61, 186, 108, 0.18);
+        --orange: #e0a04a;
+        --orange-bg: rgba(224, 160, 74, 0.18);
+        --red: #ff6b63;
+        --red-bg: rgba(255, 107, 99, 0.18);
+        --purple: #d7a0d4;
+        --purple-bg: rgba(215, 160, 212, 0.18);
+        --work: #9ec0dc;
+        --work-bg: rgba(158, 192, 220, 0.18);
+        --fill: rgba(246, 240, 234, 0.08);
+        --hover: rgba(246, 240, 234, 0.06);
+        --pressed: rgba(246, 240, 234, 0.08);
+        --selected: rgba(240, 180, 192, 0.16);
+        --segment-on: #3f3834;
+      }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.35;
+      color: var(--label);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; color: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    a { color: var(--ink); text-decoration: none; }
+    .app {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: max(12px, env(safe-area-inset-top)) 0 calc(36px + env(safe-area-inset-bottom));
+    }
+    .mast {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px var(--page) 14px;
+      background: color-mix(in srgb, var(--bg) 72%, transparent);
+      backdrop-filter: saturate(180%) blur(18px);
+      -webkit-backdrop-filter: saturate(180%) blur(18px);
+    }
+    .mast-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px 12px; margin-top: 22px; }
+    @media (max-width: 700px) {
+      .mast { flex-direction: column; }
+      .mast-actions { margin-top: 4px; justify-content: flex-start; }
+    }
+    .pill-btn[hidden] { display: none !important; }
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      height: 32px;
+      padding: 0 2px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--ink);
+      font-size: 17px;
+      font-weight: 400;
+      letter-spacing: -0.022em;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    #refresh.pill-btn { font-weight: 600; }
+    .eyebrow {
+      margin: 0 0 2px;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1.12;
+      font-weight: 700;
+      letter-spacing: -0.022em;
+    }
+    .lede {
+      margin: 6px 0 0;
+      color: var(--secondary);
+      font-size: 17px;
+      letter-spacing: -0.01em;
+    }
+    .bar-btn {
+      margin-top: 26px;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: 17px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .bar-btn:disabled { opacity: 0.45; }
+    .quick-label { margin-top: 8px; }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin: 0 var(--page);
+      background: transparent;
+      border-radius: 0;
+      overflow: visible;
+    }
+    @media (min-width: 800px) {
+      .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      background: var(--card);
+      border: 0;
+      border-radius: 14px;
+      padding: 12px;
+      cursor: pointer;
+      box-shadow: inset 0 0 0 1px transparent;
+    }
+    .count-badge {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: var(--fill);
+      color: var(--label);
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat[data-key="New"] .count-badge { background: var(--tint); color: var(--ink); }
+    .stat[data-key="In Review"] .count-badge { background: var(--orange-bg); color: var(--orange); }
+    .stat[data-key="Closed"] .count-badge { background: var(--green-bg); color: var(--green); }
+    .stat-caption { display: block; color: var(--secondary); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+    .stat[aria-pressed="true"] { background: var(--card); }
+    .stat[aria-pressed="true"][data-key="All"] { box-shadow: inset 0 0 0 1.5px var(--label); }
+    .stat[aria-pressed="true"][data-key="New"] { box-shadow: inset 0 0 0 1.5px var(--ink); }
+    .stat[aria-pressed="true"][data-key="In Review"] { box-shadow: inset 0 0 0 1.5px var(--orange); }
+    .stat[aria-pressed="true"][data-key="Closed"] { box-shadow: inset 0 0 0 1.5px var(--green); }
+    .projects-wrap { margin-top: 18px; }
+    .projects-wrap:has(#projects:empty) { display: none; }
+    .projects-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px 12px;
+      margin: 0 var(--page) 7px;
+      padding: 0 16px;
+    }
+    .projects-head h2 { margin: 0; padding: 0; }
+    .projects-legend {
+      display: flex;
+      gap: 10px;
+      margin: 0;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+    .projects-legend .new { color: var(--ink); }
+    .projects-legend .review { color: var(--orange); }
+    .projects-legend .closed { color: var(--green); }
+    #projects.group {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      padding: 6px;
+    }
+    @media (min-width: 840px) {
+      #projects.group { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    .project-tile {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      min-width: 0;
+      padding: 8px 10px 9px;
+      border: 0;
+      border-radius: 12px;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .project-tile[aria-pressed="true"] {
+      background: var(--selected);
+      box-shadow: inset 0 0 0 1.5px var(--accent);
+    }
+    .project-name {
+      min-width: 0;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .project-foot { display: flex; align-items: center; gap: 8px; }
+    .project-bar {
+      flex: 1;
+      display: flex;
+      height: 5px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: var(--fill);
+    }
+    .project-bar i { display: block; height: 100%; }
+    .project-bar i.new { background: var(--ink); }
+    .project-bar i.review { background: var(--orange); }
+    .project-bar i.closed { background: var(--green); }
+    .project-counts {
+      display: grid;
+      grid-template-columns: repeat(3, 1.2em);
+      flex: 0 0 auto;
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      text-align: right;
+    }
+    .project-counts .new { color: var(--ink); }
+    .project-counts .review { color: var(--orange); }
+    .project-counts .closed { color: var(--green); }
+    .toolbar { margin: 16px var(--page) 0; padding: 0; background: transparent; }
+    .search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 36px;
+      padding: 0 10px;
+      border-radius: 10px;
+      background: var(--fill);
+      color: var(--secondary);
+    }
+    .search svg { width: 18px; height: 18px; flex: 0 0 auto; }
+    .search input {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      padding: 10px 0;
+      font-size: 17px;
+      letter-spacing: -0.022em;
+      outline: none;
+    }
+    .search input::placeholder { color: var(--tertiary); }
+    .segment {
+      display: flex;
+      margin-top: 12px;
+      padding: 2px;
+      border-radius: 10px;
+      background: var(--fill);
+    }
+    .segment button {
+      flex: 1;
+      min-height: 32px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--label);
+      font-size: 13px;
+      font-weight: 590;
+      cursor: pointer;
+    }
+    .segment button[aria-pressed="true"] {
+      background: var(--segment-on);
+      color: var(--label);
+      box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04), 0 3px 8px rgba(0, 0, 0, 0.06);
+    }
+    .chips { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 2px; scrollbar-width: none; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 0;
+      border-radius: 999px;
+      min-height: 32px;
+      padding: 4px 8px 4px 10px;
+      background: var(--card);
+      color: var(--label);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      cursor: pointer;
+    }
+    .chip-count {
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: var(--fill);
+      color: var(--secondary);
+      display: inline-grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .chip[data-cat="Safety"] { background: var(--red-bg); color: var(--red); }
+    .chip[data-cat="Quality"] { background: var(--tint); color: var(--ink); }
+    .chip[data-cat="Housekeeping"] { background: var(--purple-bg); color: var(--purple); }
+    .chip[data-cat="Poor workmanship"] { background: var(--work-bg); color: var(--work); }
+    .chip[data-cat="Environmental"] { background: var(--green-bg); color: var(--green); }
+    .chip[aria-pressed="true"] { color: var(--on-accent); }
+    .chip[aria-pressed="true"] .chip-count { background: rgba(255, 255, 255, 0.24); color: #fff; }
+    .chip[data-cat="All"][aria-pressed="true"] { background: var(--label); }
+    .chip[data-cat="Safety"][aria-pressed="true"] { background: var(--red); }
+    .chip[data-cat="Quality"][aria-pressed="true"] { background: var(--accent); }
+    .chip[data-cat="Housekeeping"][aria-pressed="true"] { background: var(--purple); }
+    .chip[data-cat="Poor workmanship"][aria-pressed="true"] { background: var(--work); }
+    .chip[data-cat="Environmental"][aria-pressed="true"] { background: var(--green); }
+    .pill.safety { background: var(--red-bg); color: var(--red); }
+    .pill.quality { background: var(--tint); color: var(--ink); }
+    .pill.housekeeping { background: var(--purple-bg); color: var(--purple); }
+    .pill.workmanship { background: var(--work-bg); color: var(--work); }
+    .pill.environmental { background: var(--green-bg); color: var(--green); }
+    .badge-row { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+    .sync {
+      margin: 10px var(--page) 0;
+      color: var(--secondary);
+      font-size: 13px;
+    }
+    .sync:empty { display: none; }
+    .workspace { margin-top: 8px; }
+    @media (min-width: 900px) {
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+        gap: 20px;
+        align-items: start;
+        padding: 0 var(--page);
+      }
+      .stats, .toolbar, .sync, .projects-head, .projects-wrap .group, .list-wrap h2, .list-wrap .group, .list-wrap .empty, .detail-pane .group, .detail-pane .placeholder {
+        margin-left: 0;
+        margin-right: 0;
+      }
+    }
+    h2 {
+      margin: 0 var(--page) 7px;
+      padding-left: 16px;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: -0.008em;
+      text-transform: uppercase;
+    }
+    @media (min-width: 900px) {
+      .workspace h2 { margin-left: 0; margin-right: 0; }
+    }
+    .group {
+      margin: 0 var(--page);
+      background: var(--card);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    @media (min-width: 900px) {
+      .list-wrap .group, .detail-pane .group, .detail-pane .placeholder { margin: 0; }
+    }
+    .ticket {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 72px;
+      padding: 12px 16px;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+    .ticket + .ticket::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 68px;
+      right: 0;
+      height: 1px;
+      background: var(--separator);
+    }
+    .ticket[aria-current="true"] { background: var(--fill); }
+    .mark {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+    }
+    .ticket-copy { min-width: 0; flex: 1; }
+    .ticket-issue {
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: -0.022em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ticket-meta, .ticket-side {
+      color: var(--secondary);
+      font-size: 13px;
+    }
+    .ticket-meta {
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ticket-side {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+      flex: 0 0 auto;
+    }
+    .when-line {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .age {
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+      font-variant-numeric: tabular-nums;
+      color: var(--label);
+    }
+    .pill {
+      font-size: 15px;
+      font-weight: 650;
+      line-height: 1;
+      padding: 8px 12px;
+      border-radius: 999px;
+    }
+    .pill.new { background: var(--tint); color: var(--ink); }
+    .pill.review { background: var(--orange-bg); color: var(--orange); }
+    .pill.closed { background: var(--green-bg); color: var(--green); }
+    .empty, .placeholder {
+      margin: 0 var(--page);
+      padding: 36px 20px;
+      background: var(--card);
+      border-radius: var(--radius);
+      text-align: center;
+      color: var(--secondary);
+    }
+    .empty strong, .placeholder strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--label);
+      font-size: 20px;
+      letter-spacing: -0.02em;
+    }
+    .detail-pane { margin-top: 8px; }
+    @media (min-width: 900px) {
+      .detail-pane { position: sticky; top: 16px; margin-top: 0; }
+    }
+    .back {
+      display: none;
+      margin: 0 0 8px;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: 17px;
+      padding: 0 4px;
+      cursor: pointer;
+    }
+    .detail-head { padding: 18px 16px 8px; }
+    .kicker-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .detail-kicker {
+      margin: 0;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .detail-head h3 {
+      margin: 4px 0 0;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: -0.022em;
+    }
+    .detail-place { margin: 6px 0 0; color: var(--secondary); }
+    .status-label { margin: 2px 16px 8px; color: var(--secondary); font-size: 13px; }
+    .detail-pane .segment { margin: 4px 16px 16px; }
+    .field {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 44px;
+      padding: 12px 16px;
+    }
+    .field + .field { border-top: 1px solid var(--separator); }
+    .field span { color: var(--secondary); }
+    .field b { font-weight: 590; text-align: right; }
+    .notes {
+      margin: 0;
+      padding: 14px 16px 16px;
+      white-space: pre-wrap;
+    }
+    .shots {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 14px 16px 16px;
+    }
+    .shot {
+      width: 112px;
+      height: 112px;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--fill);
+      flex: 0 0 auto;
+      cursor: pointer;
+    }
+    .shot img, .shot video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+    .map-card {
+      position: relative;
+      display: block;
+      width: calc(100% - 32px);
+      height: 168px;
+      margin: 12px 16px 4px;
+      padding: 0;
+      border: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--fill);
+      cursor: pointer;
+    }
+    .map-crop {
+      position: absolute;
+      top: -46px;
+      right: -54px;
+      bottom: -46px;
+      left: -54px;
+      pointer-events: none;
+    }
+    .map-crop iframe { width: 100%; height: 100%; border: 0; }
+    .map-link {
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding: 10px 16px 14px;
+      font-weight: 590;
+    }
+    .viewer {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 72px 20px 32px;
+      background: rgba(0, 0, 0, 0.88);
+    }
+    .viewer img, .viewer video {
+      width: auto;
+      height: auto;
+      max-width: min(1100px, 100%);
+      max-height: calc(100vh - 120px);
+      object-fit: contain;
+      border-radius: 12px;
+    }
+    .viewer-status {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      text-align: center;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .viewer .map-large {
+      width: min(960px, 100%);
+      height: min(72vh, 680px);
+      border: 0;
+      border-radius: 16px;
+      background: #d8dde6;
+    }
+    .viewer-close {
+      position: absolute;
+      top: max(16px, env(safe-area-inset-top));
+      right: 16px;
+      height: 36px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.18);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .viewer-link {
+      position: absolute;
+      left: 16px;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      color: #fff;
+      font-weight: 600;
+    }
+    .photo-note { margin: 0; padding: 14px 16px 16px; color: var(--secondary); font-size: 15px; }
+    .voice-label { margin: 0; padding: 12px 16px 0; color: var(--secondary); font-size: 13px; }
+    .voice-play {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 52px;
+      padding: 8px 14px 8px 10px;
+    }
+    .voice-play + .voice-play { box-shadow: inset 0 1px 0 var(--separator); }
+    .voice-play[hidden] { display: none !important; }
+    .voice-play .play-btn {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 999px;
+      background: var(--accent);
+      color: var(--on-accent);
+      cursor: pointer;
+    }
+    .voice-play .play-btn svg { width: 16px; height: 16px; display: block; }
+    .voice-play .wave {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 28px;
+      min-width: 0;
+      cursor: pointer;
+    }
+    .voice-play .wave span {
+      width: 2.5px;
+      flex: 0 0 auto;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--tertiary);
+    }
+    .voice-play .wave span.on { background: var(--ink); }
+    .voice-play .voice-time {
+      flex: 0 0 auto;
+      min-width: 34px;
+      color: var(--secondary);
+      font-size: 13px;
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    .voice-play audio { display: none; }
+    .file-list { margin: 0; padding: 8px 16px 14px; }
+    .file-list li { margin: 6px 0; color: var(--secondary); font-size: 15px; }
+    .block { margin-top: 16px; }
+    @media (max-width: 899px) {
+      body.is-detail .summary,
+      body.is-detail .browse { display: none; }
+      body:not(.is-detail) .detail-pane { display: none; }
+      body.is-detail .back { display: inline-block; }
+      body.is-detail .detail-pane { margin: 8px 0 0; }
+    }
+    @media (hover: hover) {
+      .ticket:hover, .stat:hover, .project-tile:hover { background: var(--hover); }
+      .ticket[aria-current="true"]:hover { background: var(--fill); }
+    }
+    .ticket:active, .stat:active, .chip:active { background: var(--pressed); }
+    button:focus-visible, a:focus-visible, input:focus-visible {
+      outline: 2px solid var(--ink);
+      outline-offset: 2px;
+    }
+    .hidden { display: none !important; }
+    .app { display: none; }
+    body.is-authed .app { display: block; }
+    body.is-authed .gate { display: none; }
+    .gate {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: max(24px, env(safe-area-inset-top)) 20px 32px;
+    }
+    .gate [hidden] { display: none !important; }
+    .gate-card { width: min(440px, 100%); }
+    .gate-card h1 { margin-bottom: 0; }
+    .gate-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px 16px;
+    }
+    .gate-field + .gate-field { box-shadow: inset 0 1px 0 var(--separator); }
+    .gate-field span { color: var(--secondary); font-size: 13px; }
+    .gate-field input {
+      width: 100%;
+      border: 0;
+      padding: 0;
+      background: transparent;
+      font-size: 17px;
+      outline: none;
+    }
+    .gate-error {
+      margin: 12px 0 0;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: var(--red-bg);
+      color: var(--red);
+      font-size: 15px;
+    }
+    .gate-submit {
+      display: block;
+      width: 100%;
+      height: 52px;
+      margin-top: 16px;
+      border: 0;
+      border-radius: 16px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-size: 17px;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .gate-submit:disabled { opacity: 0.45; }
+  </style>
+</head>
+<body>
+  <div class="gate" id="gate">
+    <div class="gate-card">
+      <p class="eyebrow">Report It</p>
+      <h1 id="gate-title">Admin</h1>
+      <p class="lede" id="gate-copy">Sign in with an account created in Supabase.</p>
+      <form id="login-form">
+        <div class="group">
+          <label class="gate-field">
+            <span>Email</span>
+            <input id="login-email" type="email" autocomplete="username" required>
+          </label>
+          <label class="gate-field">
+            <span>Password</span>
+            <input id="login-password" type="password" autocomplete="current-password" required>
+          </label>
+        </div>
+        <p id="gate-error" class="gate-error" hidden></p>
+        <button class="gate-submit" id="login-submit" type="submit">Sign in</button>
+      </form>
+    </div>
+  </div>
+  <div class="app">
+    <header class="mast">
+      <div>
+        <p class="eyebrow">Report It</p>
+        <h1>Tickets</h1>
+        <p class="lede" id="today">Observations filed from the field.</p>
+      </div>
+      <div class="mast-actions">
+        <a class="pill-btn" href="reportit.html">New observation</a>
+        <button class="pill-btn" type="button" id="refresh">Refresh</button>
+        <button class="pill-btn" type="button" id="sign-out" hidden>Sign out</button>
+      </div>
+    </header>
+    <div class="summary" id="summary">
+      <h2 class="quick-label">Quick view</h2>
+      <div class="stats" id="stats"></div>
+      <div class="toolbar">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="6.5"/>
+            <path d="M16 16.5 20 20.5"/>
+          </svg>
+          <input id="search" type="search" placeholder="Search project, place, or issue" autocomplete="off">
+        </label>
+        <div class="segment" id="status-filters" role="group" aria-label="Status">
+          <button type="button" data-status="All" aria-pressed="true">All</button>
+          <button type="button" data-status="New">New</button>
+          <button type="button" data-status="In Review">In Review</button>
+          <button type="button" data-status="Closed">Closed</button>
+        </div>
+        <div class="chips" id="category-filters"></div>
+      </div>
+      <p id="sync" class="sync"></p>
+      <section class="projects-wrap">
+        <div class="projects-head">
+          <h2>Projects</h2>
+          <p class="projects-legend" aria-hidden="true"><span class="new">New</span><span class="review">In Review</span><span class="closed">Closed</span></p>
+        </div>
+        <div id="projects" class="group"></div>
+      </section>
+    </div>
+    <div class="workspace">
+      <section class="list-wrap browse">
+        <h2 id="list-label">Tickets</h2>
+        <div id="list"></div>
+      </section>
+      <section class="detail-pane" id="detail" aria-live="polite"></section>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const SUPABASE_URL = "https://hhxbcnistdyrwrjuxkzf.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_fXFDEnf0m642GEyvAcH5bQ_CTOKljc5";
+    const PROJECTS = ["AMAALA HOSPITAL", "AMAALA Staff VILLAGE", "Daraah Resort", "Four Seasons", "Jayasom", "Corallium", "Equinox Resort", "Nammos Resort", "Yacht Club", "Six Senses", "Rosewood"];
+    const CATEGORIES = ["All", "Safety", "Quality", "Housekeeping", "Poor workmanship", "Environmental"];
+    const STATUSES = ["All", "New", "In Review", "Closed"];
+    const TINT = {
+      Safety: ["var(--red-bg)", "var(--red)"],
+      Quality: ["var(--tint)", "var(--ink)"],
+      Housekeeping: ["var(--purple-bg)", "var(--purple)"],
+      "Poor workmanship": ["var(--work-bg)", "var(--work)"],
+      Environmental: ["var(--green-bg)", "var(--green)"]
+    };
+    let tickets = [];
+    let query = "";
+    let statusFilter = "All";
+    let categoryFilter = "All";
+    let projectFilter = "All";
+    let selectedRef = "";
+    let syncNote = "";
+    const $ = (id) => document.getElementById(id);
+    function el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text != null) node.textContent = text;
+      return node;
+    }
+    function statuses() {
+      try { return JSON.parse(localStorage.getItem("obs-ticket-status-v1") || "{}"); }
+      catch (error) { return {}; }
+    }
+    function statusOf(ticket) {
+      return statuses()[ticket.reference] || ticket.status || "New";
+    }
+    function setStatus(reference, status) {
+      const all = statuses();
+      all[reference] = status;
+      localStorage.setItem("obs-ticket-status-v1", JSON.stringify(all));
+      const ticket = tickets.find((item) => item.reference === reference);
+      if (ticket) ticket.status = status;
+      try {
+        const existing = JSON.parse(localStorage.getItem("obs-reports-v1") || "[]");
+        const index = existing.findIndex((item) => item.reference === reference);
+        if (index >= 0) {
+          existing[index].status = status;
+          localStorage.setItem("obs-reports-v1", JSON.stringify(existing));
+        }
+      } catch (error) {}
+      paint();
+    }
+    function asMedia(value) {
+      if (!value) return [];
+      if (typeof value === "string") {
+        try { return asMedia(JSON.parse(value)); } catch (error) { return []; }
+      }
+      return Array.isArray(value) ? value : [];
+    }
+    function normalize(row) {
+      return {
+        reference: row.reference || "",
+        createdAt: row.createdAt || row.created_at || "",
+        projectName: row.projectName || row.project_name || "",
+        zoneName: row.zoneName || row.zone_name || "",
+        subLocationName: row.subLocationName || row.sub_location_name || "",
+        subSublocationName: row.subSublocationName || row.sub_sublocation_name || "",
+        category: row.category || "Other",
+        issue: row.issue || "Observation",
+        notes: row.notes || "",
+        status: row.status || "",
+        latitude: row.latitude,
+        longitude: row.longitude,
+        accuracyMeters: row.accuracyMeters != null ? row.accuracyMeters : row.accuracy_meters,
+        media: asMedia(row.media)
+      };
+    }
+    function readLocal() {
+      try {
+        return JSON.parse(localStorage.getItem("obs-reports-v1") || "[]").map(normalize);
+      } catch (error) {
+        return [];
+      }
+    }
+    let authClient = null;
+    let sessionUser = null;
+    function client() {
+      if (!window.supabase || !supabase.createClient) return null;
+      if (!authClient) authClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      return authClient;
+    }
+    function setGateError(message) {
+      const box = $("gate-error");
+      box.hidden = !message;
+      box.textContent = message || "";
+    }
+    function showLogin() {
+      $("login-form").hidden = false;
+      $("gate-title").textContent = "Admin";
+      $("gate-copy").textContent = "Sign in with an account created in Supabase.";
+    }
+    function mailKey(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+    function listed(rows) {
+      const mine = mailKey(sessionUser && sessionUser.email);
+      if (!mine) return false;
+      return (rows || []).some((row) => Object.keys(row || {}).some((key) => mailKey(row[key]) === mine));
+    }
+    async function enter() {
+      const db = client();
+      if (!sessionUser) {
+        const session = await db.auth.getSession();
+        sessionUser = session.data.session && session.data.session.user;
+      }
+      if (!sessionUser) { showLogin(); return; }
+      const [result, allowed] = await Promise.all([
+        db.from("admin_access").select("*"),
+        db.rpc("is_admin")
+      ]);
+      if ((!result.error && listed(result.data)) || allowed.data === true) {
+        document.body.classList.add("is-authed");
+        $("sign-out").hidden = false;
+        load();
+        return;
+      }
+      const signedInAs = mailKey(sessionUser.email);
+      await db.auth.signOut();
+      sessionUser = null;
+      setGateError(signedInAs + " is not allowed to open the dashboard.");
+      showLogin();
+    }
+    async function boot() {
+      const db = client();
+      if (!db) { setGateError("Couldn't reach the sign-in service."); return; }
+      db.auth.onAuthStateChange((event) => {
+        if (event !== "SIGNED_OUT") return;
+        sessionUser = null;
+        document.body.classList.remove("is-authed", "is-detail");
+        $("sign-out").hidden = true;
+        showLogin();
+      });
+      const session = await db.auth.getSession();
+      sessionUser = session.data.session && session.data.session.user;
+      if (sessionUser) await enter();
+      else showLogin();
+    }
+    async function loadRemote() {
+      const db = client();
+      if (!db) return [];
+      const tables = ["observations", "observation", "tickets"];
+      let failed = 0;
+      let denied = false;
+      for (const table of tables) {
+        const result = await db.from(table).select("*").limit(500);
+        if (!result.error && Array.isArray(result.data)) return result.data.map(normalize);
+        const message = result.error && result.error.message ? result.error.message : "";
+        if (result.error && (result.error.code === "42501" || /permission denied/i.test(message))) denied = true;
+        failed += 1;
+      }
+      if (failed === tables.length) throw new Error(denied ? "denied" : "unread");
+      return [];
+    }
+    function merge(remote, local) {
+      const map = new Map();
+      remote.forEach((ticket) => { if (ticket.reference) map.set(ticket.reference, ticket); });
+      local.forEach((ticket) => {
+        if (!ticket.reference) return;
+        const current = map.get(ticket.reference);
+        if (!current) map.set(ticket.reference, ticket);
+        else {
+          if (!current.status && ticket.status) current.status = ticket.status;
+          const localMedia = ticket.media || [];
+          if (!current.media || !current.media.length) current.media = localMedia;
+          else {
+            const previews = new Map(localMedia.filter((item) => item.path && item.preview).map((item) => [item.path, item.preview]));
+            current.media = current.media.map((item) => item.preview || !previews.has(item.path) ? item : Object.assign({}, item, { preview: previews.get(item.path) }));
+          }
+        }
+      });
+      return Array.from(map.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    async function load() {
+      const button = $("refresh");
+      button.disabled = true;
+      const local = readLocal();
+      let remote = [];
+      syncNote = "";
+      try { remote = await loadRemote(); }
+      catch (error) {
+        syncNote = error && error.message === "denied"
+          ? "Observations are saved on the server, but this dashboard is not allowed to read them."
+          : (local.length ? "Showing tickets saved on this device." : "");
+      }
+      tickets = merge(remote, local);
+      prefetchThumbs();
+      if (selectedRef && !tickets.some((ticket) => ticket.reference === selectedRef)) selectedRef = "";
+      button.disabled = false;
+      paint();
+    }
+    function place(ticket) {
+      return [ticket.projectName, ticket.zoneName, ticket.subLocationName, ticket.subSublocationName].filter(Boolean).join(" · ");
+    }
+    function openAge(iso) {
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return "";
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const diff = Math.round((start - day) / 86400000);
+      if (diff <= 0) return "Opened today";
+      if (diff === 1) return "1 day";
+      return diff + " days";
+    }
+    function when(iso) {
+      const date = new Date(iso);
+      if (Number.isNaN(date.getTime())) return "";
+      const time = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      const diff = Math.round((start - day) / 86400000);
+      if (diff === 0) return "Today, " + time;
+      if (diff === 1) return "Yesterday, " + time;
+      return date.toLocaleDateString([], { month: "short", day: "numeric" }) + ", " + time;
+    }
+    function visible() {
+      const needle = query.trim().toLowerCase();
+      return tickets.filter((ticket) => {
+        if (statusFilter !== "All" && statusOf(ticket) !== statusFilter) return false;
+        if (categoryFilter !== "All" && ticket.category !== categoryFilter) return false;
+        if (projectFilter !== "All" && ticket.projectName !== projectFilter) return false;
+        if (!needle) return true;
+        return [ticket.reference, ticket.issue, ticket.category, ticket.notes, place(ticket)].join(" ").toLowerCase().includes(needle);
+      });
+    }
+    function paintStats() {
+      const counts = { All: tickets.length, New: 0, "In Review": 0, Closed: 0 };
+      tickets.forEach((ticket) => { counts[statusOf(ticket)] += 1; });
+      const box = $("stats");
+      box.innerHTML = "";
+      [["All", "Total"], ["New", "New"], ["In Review", "In Review"], ["Closed", "Closed"]].forEach(([key, label]) => {
+        const button = el("button", "stat");
+        button.type = "button";
+        button.dataset.key = key;
+        button.appendChild(el("span", "count-badge", String(counts[key])));
+        button.appendChild(el("span", "stat-caption", label));
+        button.setAttribute("aria-pressed", statusFilter === key && categoryFilter === "All" && projectFilter === "All" && !query ? "true" : "false");
+        button.addEventListener("click", () => {
+          statusFilter = key;
+          categoryFilter = "All";
+          projectFilter = "All";
+          query = "";
+          $("search").value = "";
+          paint();
+        });
+        box.appendChild(button);
+      });
+    }
+    function paintFilters() {
+      document.querySelectorAll("#status-filters button").forEach((button) => {
+        button.setAttribute("aria-pressed", button.dataset.status === statusFilter ? "true" : "false");
+      });
+      const chips = $("category-filters");
+      chips.innerHTML = "";
+      CATEGORIES.forEach((name) => {
+        const count = name === "All" ? tickets.length : tickets.filter((ticket) => ticket.category === name).length;
+        const button = el("button", "chip");
+        button.type = "button";
+        button.dataset.cat = name;
+        button.appendChild(document.createTextNode(name));
+        button.appendChild(el("span", "chip-count", String(count)));
+        button.setAttribute("aria-pressed", categoryFilter === name ? "true" : "false");
+        button.addEventListener("click", () => { categoryFilter = name; paint(); });
+        chips.appendChild(button);
+      });
+    }
+    function paintList() {
+      const rows = visible();
+      $("list-label").textContent = rows.length === 1 ? "1 Ticket" : rows.length + " Tickets";
+      $("sync").textContent = syncNote;
+      const list = $("list");
+      list.innerHTML = "";
+      if (!rows.length) {
+        const empty = el("div", "empty");
+        empty.appendChild(el("strong", "", tickets.length ? "No matches" : (syncNote ? "Can't load server tickets" : "No tickets yet")));
+        empty.appendChild(document.createTextNode(tickets.length ? "Try a different status, category, or search." : (syncNote || "Observations filed in Report It will show up here.")));
+        list.appendChild(empty);
+        return;
+      }
+      const group = el("div", "group");
+      rows.forEach((ticket) => {
+        const button = el("button", "ticket");
+        button.type = "button";
+        if (ticket.reference === selectedRef) button.setAttribute("aria-current", "true");
+        const tint = TINT[ticket.category] || ["var(--fill)", "var(--label)"];
+        const mark = el("span", "mark", (ticket.category || "?").slice(0, 1));
+        mark.style.background = tint[0];
+        mark.style.color = tint[1];
+        button.appendChild(mark);
+        const copy = el("span", "ticket-copy");
+        copy.appendChild(el("div", "ticket-issue", ticket.issue));
+        copy.appendChild(el("div", "ticket-meta", place(ticket) || ticket.reference));
+        button.appendChild(copy);
+        const side = el("span", "ticket-side");
+        const filed = el("span", "when-line");
+        filed.appendChild(el("span", "age", openAge(ticket.createdAt)));
+        const date = new Date(ticket.createdAt);
+        if (!Number.isNaN(date.getTime())) {
+          const start = new Date();
+          start.setHours(0, 0, 0, 0);
+          const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+          const diff = Math.round((start - day) / 86400000);
+          const clock = date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+          filed.appendChild(document.createTextNode(diff > 1 ? date.toLocaleDateString([], { month: "short", day: "numeric" }) + ", " + clock : clock));
+        }
+        side.appendChild(filed);
+        const badges = el("span", "badge-row");
+        const status = statusOf(ticket);
+        badges.appendChild(el("span", "pill " + (ticket.category || "").toLowerCase(), ticket.category));
+        badges.appendChild(el("span", "pill " + (status === "In Review" ? "review" : status.toLowerCase()), status));
+        side.appendChild(badges);
+        button.appendChild(side);
+        button.addEventListener("click", () => {
+          selectedRef = ticket.reference;
+          document.body.classList.add("is-detail");
+          paint();
+        });
+        group.appendChild(button);
+      });
+      list.appendChild(group);
+    }
+    function addField(group, label, value) {
+      if (!value) return;
+      const row = el("div", "field");
+      row.appendChild(el("span", "", label));
+      row.appendChild(el("b", "", value));
+      group.appendChild(row);
+    }
+    const mediaCache = new Map();
+    const THUMB = { width: 160, height: 160, resize: "cover", quality: 45 };
+    function warm(url) {
+      if (!url) return;
+      const image = new Image();
+      image.decoding = "async";
+      image.src = url;
+    }
+    function prefetchThumbs() {
+      tickets.forEach((ticket) => {
+        (ticket.media || []).forEach((item) => {
+          if ((item.mime || "").startsWith("image/") && item.path) signedMedia(item.path, THUMB).then(warm);
+        });
+      });
+    }
+    async function signedMedia(path, transform) {
+      const cacheKey = path + (transform ? "|thumb" : "|full");
+      if (mediaCache.has(cacheKey)) return mediaCache.get(cacheKey);
+      const pending = (async () => {
+        const db = client();
+        if (!db || !path) return "";
+        const signed = await db.storage.from("observation-media").createSignedUrl(path, 60 * 60, transform ? { transform: transform } : undefined);
+        if (signed && !signed.error && signed.data && signed.data.signedUrl) return signed.data.signedUrl;
+        return "";
+      })();
+      mediaCache.set(cacheKey, pending);
+      const url = await pending;
+      if (!url) mediaCache.delete(cacheKey);
+      return url;
+    }
+    function isAudio(item) {
+      const name = item.name || "";
+      if (/^voice-note\./i.test(name) || /\.(m4a|mp3|aac|wav|caf)$/i.test(name)) return true;
+      return (item.mime || "").startsWith("audio/");
+    }
+    async function resolveMedia(item) {
+      if (item.path && (item.mime || "").startsWith("image/")) {
+        const thumb = await signedMedia(item.path, THUMB);
+        if (thumb) return thumb;
+      }
+      if (item.path) {
+        const full = await signedMedia(item.path);
+        if (full) return full;
+      }
+      return item.preview || item.url || "";
+    }
+    function mapEmbed(lat, lng, pad) {
+      const delta = pad || 0.004;
+      const bbox = [lng - delta, lat - delta * 0.75, lng + delta, lat + delta * 0.75].join(",");
+      return "https://www.openstreetmap.org/export/embed.html?bbox=" + bbox + "&layer=mapnik&marker=" + lat + "%2C" + lng;
+    }
+    function closeViewer() {
+      const veil = document.querySelector(".viewer");
+      if (veil) veil.remove();
+      document.removeEventListener("keydown", onViewerKey);
+    }
+    function onViewerKey(event) {
+      if (event.key === "Escape") closeViewer();
+    }
+    function openViewer(view) {
+      closeViewer();
+      const veil = el("div", "viewer");
+      const close = el("button", "viewer-close", "Close");
+      close.type = "button";
+      close.addEventListener("click", closeViewer);
+      veil.appendChild(close);
+      if (view.kind === "map") {
+        const frame = document.createElement("iframe");
+        frame.className = "map-large";
+        frame.src = view.src;
+        frame.title = "Location";
+        veil.appendChild(frame);
+        if (view.link) {
+          const link = el("a", "viewer-link", "Open in Maps");
+          link.href = view.link;
+          link.target = "_blank";
+          link.rel = "noopener";
+          veil.appendChild(link);
+        }
+      } else if (view.kind === "video") {
+        const video = document.createElement("video");
+        video.src = view.src;
+        video.controls = true;
+        video.autoplay = true;
+        veil.appendChild(video);
+      } else {
+        const image = document.createElement("img");
+        image.alt = view.title || "Photo";
+        if (view.src) image.src = view.src;
+        veil.appendChild(image);
+        if (view.loading) veil.appendChild(el("p", "viewer-status", "Loading full photo…"));
+      }
+      veil.addEventListener("click", (event) => { if (event.target === veil) closeViewer(); });
+      document.body.appendChild(veil);
+      document.addEventListener("keydown", onViewerKey);
+    }
+    function paintDetail() {
+      const pane = $("detail");
+      pane.innerHTML = "";
+      const ticket = tickets.find((item) => item.reference === selectedRef);
+      if (!ticket) {
+        if (window.matchMedia("(min-width: 900px)").matches) {
+          const hold = el("div", "placeholder");
+          hold.appendChild(el("strong", "", "Select a ticket"));
+          hold.appendChild(document.createTextNode("Place, category, notes, photos, and voice notes open here."));
+          pane.appendChild(hold);
+        }
+        return;
+      }
+      const back = el("button", "back", "Tickets");
+      back.type = "button";
+      back.addEventListener("click", () => {
+        selectedRef = "";
+        document.body.classList.remove("is-detail");
+        paint();
+      });
+      pane.appendChild(back);
+      const card = el("div", "group");
+      const head = el("div", "detail-head");
+      const kicker = el("div", "kicker-row");
+      kicker.appendChild(el("p", "detail-kicker", ticket.reference));
+      const currentStatus = statusOf(ticket);
+      kicker.appendChild(el("span", "pill " + (currentStatus === "In Review" ? "review" : currentStatus.toLowerCase()), currentStatus));
+      head.appendChild(kicker);
+      head.appendChild(el("h3", "", ticket.issue));
+      head.appendChild(el("p", "detail-place", place(ticket)));
+      card.appendChild(head);
+      card.appendChild(el("p", "status-label", "Status"));
+      const segment = el("div", "segment");
+      ["New", "In Review", "Closed"].forEach((status) => {
+        const button = el("button", "", status);
+        button.type = "button";
+        button.setAttribute("aria-pressed", statusOf(ticket) === status ? "true" : "false");
+        button.addEventListener("click", () => setStatus(ticket.reference, status));
+        segment.appendChild(button);
+      });
+      card.appendChild(segment);
+      pane.appendChild(card);
+      const voices = ticket.media.filter(isAudio);
+      const visuals = ticket.media.filter((item) => !isAudio(item));
+      if (visuals.length) pane.appendChild(mediaBlock(visuals));
+      if (voices.length) pane.appendChild(voiceBlock(voices));
+      const facts = el("div", "group block");
+      addField(facts, "Category", ticket.category);
+      addField(facts, "Project", ticket.projectName);
+      addField(facts, "Zone", ticket.zoneName);
+      addField(facts, "Sub-location", ticket.subLocationName);
+      addField(facts, "Spot", ticket.subSublocationName);
+      addField(facts, "Filed", when(ticket.createdAt));
+      pane.appendChild(facts);
+      if (ticket.latitude != null && ticket.longitude != null) {
+        const maps = "https://maps.apple.com/?ll=" + ticket.latitude + "," + ticket.longitude + "&q=" + encodeURIComponent(place(ticket) || ticket.reference);
+        const block = el("div", "group block");
+        const mapButton = el("button", "map-card");
+        mapButton.type = "button";
+        mapButton.setAttribute("aria-label", "Enlarge map");
+        const crop = el("span", "map-crop");
+        const frame = document.createElement("iframe");
+        frame.src = mapEmbed(Number(ticket.latitude), Number(ticket.longitude), 0.004);
+        frame.title = "Location map";
+        frame.tabIndex = -1;
+        crop.appendChild(frame);
+        mapButton.appendChild(crop);
+        mapButton.addEventListener("click", () => openViewer({ kind: "map", src: mapEmbed(Number(ticket.latitude), Number(ticket.longitude), 0.012), link: maps }));
+        block.appendChild(mapButton);
+        const link = el("a", "map-link", "Open in Maps");
+        link.href = maps;
+        link.target = "_blank";
+        link.rel = "noopener";
+        block.appendChild(link);
+        pane.appendChild(block);
+      }
+      if (ticket.notes) {
+        const notes = el("div", "group block");
+        notes.appendChild(el("p", "notes", ticket.notes));
+        pane.appendChild(notes);
+      }
+    }
+    function shotButton(item, src) {
+      const video = (item.mime || "").startsWith("video/");
+      const button = el("button", "shot");
+      button.type = "button";
+      button.setAttribute("aria-label", (video ? "Play " : "Enlarge ") + (item.name || "photo"));
+      if (video) {
+        const player = document.createElement("video");
+        player.src = src;
+        player.muted = true;
+        button.appendChild(player);
+        button.addEventListener("click", () => openViewer({ kind: "video", src: src, title: item.name }));
+      } else {
+        const image = document.createElement("img");
+        image.alt = item.name || "Photo";
+        image.decoding = "async";
+        image.src = src;
+        button.appendChild(image);
+        if (item.path) signedMedia(item.path).then(warm);
+        button.addEventListener("click", () => {
+          openViewer({ kind: "image", src: "", title: item.name, loading: true });
+          const shown = document.querySelector(".viewer img");
+          const status = document.querySelector(".viewer-status");
+          const full = item.path ? signedMedia(item.path) : Promise.resolve(src);
+          full.then((url) => {
+            if (!shown || !document.body.contains(shown)) return;
+            if (!url) {
+              if (status) status.textContent = "Couldn't open the full photo.";
+              shown.src = src;
+              return;
+            }
+            shown.onload = () => { if (status) status.remove(); };
+            shown.src = url;
+            if (shown.complete && shown.naturalWidth) status.remove();
+          });
+        });
+      }
+      return button;
+    }
+    function mediaBlock(items) {
+      const media = el("div", "group block");
+      const shots = el("div", "shots");
+      const note = el("p", "photo-note", "Opening…");
+      media.appendChild(shots);
+      media.appendChild(note);
+      let pending = items.length;
+      let shown = 0;
+      items.forEach((item) => {
+        const preview = item.preview || "";
+        let current = null;
+        if (preview) {
+          shown += 1;
+          current = shotButton(item, preview);
+          shots.appendChild(current);
+        }
+        resolveMedia(item).then((src) => {
+          pending -= 1;
+          if (src && src !== preview) {
+            const button = shotButton(item, src);
+            if (current) current.replaceWith(button);
+            else shots.appendChild(button);
+            current = button;
+            if (!preview) shown += 1;
+          }
+          if (pending) return;
+          if (!shots.childNodes.length) shots.remove();
+          if (shown) note.remove();
+          else note.textContent = "The file is saved, but this dashboard is not allowed to open it.";
+        });
+      });
+      return media;
+    }
+    function voiceClock(seconds) {
+      const safe = Math.max(0, Math.floor(seconds || 0));
+      return Math.floor(safe / 60) + ":" + String(safe % 60).padStart(2, "0");
+    }
+    function voiceShape(seed) {
+      let n = 2166136261;
+      const text = seed || "voice";
+      for (let i = 0; i < text.length; i++) n = Math.imul(n ^ text.charCodeAt(i), 16777619);
+      const bars = [];
+      for (let i = 0; i < 42; i++) {
+        n = Math.imul(n ^ (n >>> 13), 1274126177);
+        bars.push(0.18 + ((n >>> 0) % 1000) / 1000 * 0.82);
+      }
+      return bars;
+    }
+    function voicePeaks(url) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return Promise.resolve(null);
+      const ctx = new Ctx();
+      return fetch(url).then((response) => response.arrayBuffer()).then((bytes) => ctx.decodeAudioData(bytes)).then((buffer) => {
+        const channel = buffer.getChannelData(0);
+        const block = Math.max(1, Math.floor(channel.length / 42));
+        const peaks = [];
+        let loudest = 0.01;
+        for (let i = 0; i < 42; i++) {
+          let max = 0;
+          const start = i * block;
+          const end = Math.min(channel.length, start + block);
+          for (let j = start; j < end; j += 12) {
+            const value = Math.abs(channel[j]);
+            if (value > max) max = value;
+          }
+          peaks.push(max);
+          if (max > loudest) loudest = max;
+        }
+        return peaks.map((value) => Math.min(1, Math.pow(value / loudest, 0.65)));
+      }).catch(() => null).finally(() => ctx.close());
+    }
+    function mountVoice(card, item) {
+      const playIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 6.5v11l9-5.5-9-5.5Z"/></svg>';
+      const pauseIcon = '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+      const row = el("div", "voice-play");
+      const play = el("button", "play-btn");
+      play.type = "button";
+      play.setAttribute("aria-label", "Play voice note");
+      play.innerHTML = playIcon;
+      const wave = el("div", "wave");
+      wave.setAttribute("aria-hidden", "true");
+      const bars = [];
+      for (let i = 0; i < 42; i++) {
+        const bar = document.createElement("span");
+        wave.appendChild(bar);
+        bars.push(bar);
+      }
+      const time = el("span", "voice-time", "0:00");
+      const player = document.createElement("audio");
+      player.preload = "metadata";
+      row.appendChild(play);
+      row.appendChild(wave);
+      row.appendChild(time);
+      row.appendChild(player);
+      row.hidden = true;
+      const status = el("p", "photo-note", "Opening voice note…");
+      card.appendChild(status);
+      card.appendChild(row);
+      let levels = voiceShape(item.name || item.path || "voice");
+      let progress = 0;
+      function paintBars() {
+        bars.forEach((bar, index) => {
+          const level = levels[index] || 0;
+          bar.style.height = (4 + Math.round(level * 22)) + "px";
+          bar.classList.toggle("on", progress > 0 && (index + 0.5) / bars.length <= progress);
+        });
+      }
+      function showTime() {
+        const dur = player.duration;
+        if (!dur || !isFinite(dur)) return;
+        const now = player.currentTime || 0;
+        time.textContent = voiceClock(player.paused && now < 0.25 ? dur : now);
+      }
+      paintBars();
+      play.addEventListener("click", () => {
+        if (!player.src) return;
+        if (player.paused) {
+          player.play();
+          play.innerHTML = pauseIcon;
+          play.setAttribute("aria-label", "Pause voice note");
+        } else {
+          player.pause();
+          play.innerHTML = playIcon;
+          play.setAttribute("aria-label", "Play voice note");
+        }
+      });
+      wave.addEventListener("click", (event) => {
+        if (!player.duration) return;
+        const rect = wave.getBoundingClientRect();
+        const ratio = Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width));
+        player.currentTime = ratio * player.duration;
+        progress = ratio;
+        paintBars();
+        showTime();
+      });
+      player.addEventListener("timeupdate", () => {
+        if (player.ended || !player.duration) return;
+        progress = player.currentTime / player.duration;
+        paintBars();
+        showTime();
+      });
+      player.addEventListener("loadedmetadata", showTime);
+      player.addEventListener("ended", () => {
+        play.innerHTML = playIcon;
+        play.setAttribute("aria-label", "Play voice note");
+        progress = 0;
+        paintBars();
+        time.textContent = voiceClock(player.duration);
+      });
+      resolveMedia(item).then((src) => {
+        if (!card.isConnected) return;
+        if (!src) {
+          status.textContent = "The voice note is saved, but this dashboard is not allowed to open it.";
+          row.remove();
+          return;
+        }
+        status.remove();
+        row.hidden = false;
+        player.src = src;
+        voicePeaks(src).then((peaks) => {
+          if (!peaks || !card.isConnected) return;
+          levels = peaks;
+          paintBars();
+        });
+      });
+    }
+    function voiceBlock(items) {
+      const card = el("div", "group block");
+      card.appendChild(el("p", "voice-label", items.length > 1 ? "Voice notes" : "Voice note"));
+      items.forEach((item) => mountVoice(card, item));
+      return card;
+    }
+    function paint() {
+      $("today").textContent = new Date().toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+      document.body.classList.toggle("is-detail", Boolean(selectedRef) && window.matchMedia("(max-width: 899px)").matches);
+      paintStats();
+      paintProjects();
+      paintFilters();
+      paintList();
+      paintDetail();
+    }
+    function paintProjects() {
+      const box = $("projects");
+      const wrap = box.parentElement;
+      box.innerHTML = "";
+      const counts = new Map();
+      tickets.forEach((ticket) => {
+        const name = ticket.projectName || "Unknown";
+        const row = counts.get(name) || { total: 0, New: 0, "In Review": 0, Closed: 0 };
+        row.total += 1;
+        const status = statusOf(ticket);
+        row[status] = (row[status] || 0) + 1;
+        counts.set(name, row);
+      });
+      const names = PROJECTS.filter((name) => counts.has(name));
+      counts.forEach((row, name) => { if (!names.includes(name)) names.push(name); });
+      const ranked = names.map((name) => Object.assign({ name }, counts.get(name))).filter((item) => item.total > 0);
+      ranked.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+      if (!ranked.length) { wrap.hidden = true; return; }
+      wrap.hidden = false;
+      ranked.forEach((item) => {
+        const fresh = item.New || 0;
+        const review = item["In Review"] || 0;
+        const closed = item.Closed || 0;
+        const button = el("button", "project-tile");
+        button.type = "button";
+        button.setAttribute("aria-pressed", projectFilter === item.name ? "true" : "false");
+        button.setAttribute("aria-label", item.name + ", " + item.total + " tickets, " + fresh + " new, " + review + " in review, " + closed + " closed");
+        button.appendChild(el("span", "project-name", item.name));
+        const foot = el("span", "project-foot");
+        const bar = el("span", "project-bar");
+        bar.setAttribute("aria-hidden", "true");
+        [["new", fresh], ["review", review], ["closed", closed]].forEach(([kind, count]) => {
+          if (!count) return;
+          const seg = document.createElement("i");
+          seg.className = kind;
+          seg.style.flex = count + " 0 0";
+          bar.appendChild(seg);
+        });
+        foot.appendChild(bar);
+        const counts = el("span", "project-counts");
+        counts.setAttribute("aria-hidden", "true");
+        [["new", fresh], ["review", review], ["closed", closed]].forEach(([kind, count]) => {
+          counts.appendChild(el("span", kind, String(count)));
+        });
+        foot.appendChild(counts);
+        button.appendChild(foot);
+        button.addEventListener("click", () => {
+          projectFilter = projectFilter === item.name ? "All" : item.name;
+          paint();
+        });
+        box.appendChild(button);
+      });
+    }
+    $("search").addEventListener("input", (event) => { query = event.target.value; paint(); });
+    $("status-filters").addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      statusFilter = button.dataset.status;
+      paint();
+    });
+    $("refresh").addEventListener("click", load);
+    $("login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const db = client();
+      const email = $("login-email").value.trim();
+      const password = $("login-password").value;
+      setGateError("");
+      $("login-submit").disabled = true;
+      try {
+        const result = await db.auth.signInWithPassword({ email: email, password: password });
+        if (result.error) throw result.error;
+        sessionUser = result.data.user;
+        await enter();
+      } catch (error) {
+        setGateError(error && error.message ? error.message : "Couldn't sign in.");
+      } finally {
+        $("login-submit").disabled = false;
+      }
+    });
+    $("sign-out").addEventListener("click", () => client().auth.signOut());
+    window.addEventListener("resize", () => document.body.classList.toggle("is-detail", Boolean(selectedRef) && window.matchMedia("(max-width: 899px)").matches));
+    boot();
+  </script>
+</body>
+</html>
